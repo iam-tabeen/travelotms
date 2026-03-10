@@ -64,7 +64,7 @@ export async function submitCustomTour(tenantId: string, formData: FormData) {
         <p><strong>Budget:</strong> ${budget}</p>
         <p><strong>Destinations:</strong> ${destinations.join(', ')}</p>
         <br/>
-        <a href="http://localhost:3000/admin/leads?tab=custom" style="background-color: #003580; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px;">View Lead in Dashboard</a>
+        <a href="${process.env.NEXT_PUBLIC_APP_URL}/admin/leads?tab=custom" style="background-color: #003580; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px;">View Lead in Dashboard</a>
       `
     };
 
