@@ -19,7 +19,7 @@ export async function submitContact(formData: FormData) {
 
     const mailOptions = {
       from: process.env.EMAIL_USER,
-      to: process.env.EMAIL_USER, // Sends to your inbox
+      to: "iamtabeenhaider@gmail.com", // Sends to your inbox
       replyTo: email, // MAGIC TRICK: Hitting 'Reply' in Gmail replies directly to the client!
       subject: `📩 New Website Inquiry: ${subject}`,
       html: `

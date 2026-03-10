@@ -50,7 +50,7 @@ export async function submitBooking(
     const mailOptions = {
       from: process.env.EMAIL_USER,
       // For now, send it to yourself. Later, we can change this to the Tenant's email!
-      to: process.env.EMAIL_USER, 
+      to: "iamtabeenhaider@gmail.com", 
       subject: `🎉 New Tour Lead: ${customerName}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; padding: 24px; border: 1px solid #E5E9F2; border-radius: 16px; background-color: #FAFAFA;">

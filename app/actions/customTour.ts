@@ -52,7 +52,7 @@ export async function submitCustomTour(tenantId: string, formData: FormData) {
 
     const mailOptions = {
       from: process.env.EMAIL_USER,
-      to: process.env.EMAIL_USER, 
+      to: "iamtabeenhaider@gmail.com", 
       replyTo: email, 
       subject: `✨ New Custom Tour Request: ${fullName}`,
       html: `
