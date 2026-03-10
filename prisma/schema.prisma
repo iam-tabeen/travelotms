@@ -1,0 +1,123 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  
+  // directUrl = env("DIRECT_URL") // Uncomment this line if you are using Supabase connection pooling
+}
+
+// 1. The Tour Operator (The company you sell the website to)
+model Tenant {
+  id            String   @id @default(uuid())
+  companyName   String
+  subdomain     String   @unique // e.g., 'hunza-travels'
+  logoUrl       String?
+  userId        String?  @unique 
+  adminEmail    String   @unique
+  createdAt     DateTime @default(now())
+  tours         Tour[]
+  bookings      Booking[]
+  customTourLeads   CustomTourLead[]
+
+
+  
+  // Theme Colors
+  primaryColor  String?  @default("#003580") // Main brand color
+  accentColor   String?  @default("#FF8C00") // Highlights, badges
+  navbarColor   String?  @default("#003580") // Navbar background
+  buttonColor   String?  @default("#FF8C00") // Call to action buttons
+  headingColor  String?  @default("#1F2937") // Main text/headings
+  footerColor   String?  @default("#111827") // Footer Background
+  cardColor     String?  @default("#111827") // Card Objects Color
+  navlink       String?  @default("#111827") // Add your new color here
+}
+
+// 2. The Tour Package
+model Tour {
+  id            String   @id @default(uuid())
+  tenantId      String
+  title         String
+  status        String   @default("ACTIVE") // ACTIVE or DRAFT
+  bookingMode   String   @default("BOTH")   
+  destination   String
+  duration      String   // e.g., "5 Days / 4 Nights"
+  basePrice     Int      // Store as integer for PKR
+  transportType String
+  accommodation String
+  coverImage    String
+  departureType      String    @default("CLIENT_CHOICE") 
+  departureDate      DateTime? 
+  departureEveryYear Boolean   @default(false)
+
+  // --- NEW REDESIGN FIELDS ---
+  gallery       String[] // Array of image URLs for the slider
+  overview      String?  @db.Text // Long text for the Overview tab
+  inclusions    String[] // List of things included
+  exclusions    String[] // List of things not included
+  policy        String?  @db.Text // Long text for the Tour Policy tab
+
+  createdAt     DateTime @default(now())
+
+  tenant        Tenant         @relation(fields: [tenantId], references: [id])
+  itineraryDays ItineraryDay[]
+  bookings      Booking[]
+}
+
+// 3. The Day-by-Day Details
+model ItineraryDay {
+  id        String @id @default(uuid())
+  tourId    String
+  dayNumber Int
+  title     String
+  details   String @db.Text
+
+  tour      Tour   @relation(fields: [tourId], references: [id], onDelete: Cascade)
+}
+
+// 4. The Customer Bookings
+model Booking {
+  id            String   @id @default(uuid())
+  tenantId      String
+  tourId        String
+  customerName  String
+  customerEmail String
+  customerPhone String
+  numTravelers  Int
+  totalPrice    Int
+  travelDate    DateTime // Essential for scheduling
+  specialNotes  String?  @db.Text // For specific customer requests
+  status        String   @default("PENDING") // PENDING, CONFIRMED, CANCELLED
+  paymentProof  String?  // URL to the uploaded receipt image
+  createdAt     DateTime @default(now())
+
+  tenant        Tenant   @relation(fields: [tenantId], references: [id])
+  tour          Tour     @relation(fields: [tourId], references: [id])
+}
+
+model CustomTourLead {
+  id             String   @id @default(cuid())
+  tenantId       String
+  tenant         Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  fullName       String
+  email          String
+  phone          String
+  cityCountry    String?
+  
+  dateFrom       String
+  dateTo         String
+  travelers      String
+  accommodation  String?
+  budget         String?
+  
+  destinations   String   // We will save arrays as comma-separated strings
+  tourTypes      String   // We will save arrays as comma-separated strings
+  requirements   String?
+  
+  status         String   @default("PENDING")
+  createdAt      DateTime @default(now())
+}
