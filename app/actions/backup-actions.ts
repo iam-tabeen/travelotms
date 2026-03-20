@@ -5,11 +5,11 @@ import { revalidatePath } from "next/cache";
 import { createClient } from '@supabase/supabase-js';
 import { sendBackupEmail } from '@/lib/mail';
 
-// Initialize Supabase with the MASTER key so the server can upload to the private bucket
-const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// ✅ THE FIX: Safely initialize Supabase with fallback strings to prevent Vercel build crashes
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://dummy.supabase.co';
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'dummy-key-for-builds';
+
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 export async function createBackup(tenantId: string, type: 'MANUAL' | 'AUTOMATIC') {
     try {
