@@ -6,8 +6,12 @@ import { usePathname } from 'next/navigation'; // <-- 2. Import the route checke
 export default function WhatsAppButton({ phone }: { phone?: string | null }) {
   const pathname = usePathname(); // 3. Get the current URL
 
-  // 4. THE FIX: If the user is on any admin page, return absolutely nothing!
-  if (pathname?.startsWith('/admin')) {
+  // 4. THE FIX: Hide the button on admin, suspended, and super-admin pages!
+  if (
+    pathname?.startsWith('/admin') || 
+    pathname?.startsWith('/suspended') || 
+    pathname?.startsWith('/super-admin')
+  ) {
     return null;
   }
 
@@ -37,3 +41,4 @@ export default function WhatsAppButton({ phone }: { phone?: string | null }) {
     </a>
   );
 }
+

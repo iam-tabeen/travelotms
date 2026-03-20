@@ -1,5 +1,5 @@
 import prisma from '@/lib/prisma';
-import Link from 'next/link'; // <-- 1. Imported Link
+import Link from 'next/link'; 
 import Navbar from '@/components/lovable/Navbar';
 import TourCard from '@/components/TourCard';
 import HeroSection from '@/components/lovable/HeroSection';
@@ -9,9 +9,21 @@ import GallerySection from '@/components/lovable/GallerySection';
 import TestimonialsSection from '@/components/lovable/TestimonialsSection';
 import CtaBanner from '@/components/lovable/CTASection';
 
+// 1. THE CACHE KILLER: This forces Next.js to always fetch fresh data!
+export const dynamic = 'force-dynamic';
+
 export default async function HomePage() {
-  // 1. Fetch the tenant AND include the tours
-  const tenant = await prisma.tenant.findFirst({
+  
+  // 2. THE BULLETPROOF ID SWITCHER
+  const targetTenantId = process.env.NODE_ENV === 'development'
+    ? 'local-agency-123' // <--- Paste your Sandbox ID here!
+    : '0a469103-94a5-45cf-859d-4dd2fe1d4586'; // This is your Live Vercel ID
+
+  // 3. Fetch the correct agency based on the environment
+  const tenant = await prisma.tenant.findUnique({
+    where: { 
+        id: targetTenantId 
+    },
     include: {
       tours: {
         where: { status: 'ACTIVE' },
@@ -22,7 +34,7 @@ export default async function HomePage() {
 
   if (!tenant) return null;
 
-  // 2. Map database colors to global CSS variables
+  // 4. Map database colors to global CSS variables
   const globalTheme = {
     '--theme-primary': tenant.primaryColor || '#003580',
     '--theme-accent': tenant.accentColor || '#FF8C00',
@@ -36,8 +48,9 @@ export default async function HomePage() {
 
   return (
     <main className="min-h-screen bg-white"  style={globalTheme}>
+
       
-      {/* 3. Clean components without color props! */}
+      {/* Clean components without color props! */}
       <Navbar 
         companyName={tenant.companyName} 
         logoUrl={tenant.logoUrl} 

@@ -1,158 +1,364 @@
 import prisma from '@/lib/prisma';
-
 import Link from 'next/link';
-import DeleteTourButton from '@/components/DeleteTourButton';
-import BookingModeDropdown from '@/components/BookingModeDropdown';
-import { auth } from '@clerk/nextjs/server';
-import React from 'react';
 import { redirect } from 'next/navigation';
+import DashboardCharts from '@/components/DashboardCharts';
+import { Calendar, Clock, MapPin, Activity, Users, ArrowRight, TrendingUp, DollarSign, CreditCard } from 'lucide-react';
+import { getUserAccess } from '@/lib/getTenant'; 
 
 export const dynamic = 'force-dynamic';
 
-
-
 export default async function AdminDashboard() {
-  const { userId } = await auth();
-  if (!userId) return null;
+    const access = await getUserAccess();
+    if (!access) redirect('/admin/settings');
+    
+    const { tenant, role } = access;
+    
+    const canManageTours = ['OWNER', 'ADMIN'].includes(role);
 
-  const tenant = await prisma.tenant.findUnique({ where: { userId } });
-  
-  if (!tenant) {
-    redirect('/admin/settings');
-  }
+    const toursCount = await prisma.tour.count({ where: { tenantId: tenant.id } });
+    const activeToursCount = await prisma.tour.count({ where: { tenantId: tenant.id, status: 'ACTIVE' } });
+    
+    const leads = await prisma.booking.findMany({
+        where: { tenantId: tenant.id }, 
+        select: { status: true, totalPrice: true, isWaitlist: true, createdAt: true }
+    });
 
-  const tours = await prisma.tour.findMany({
-    where: { tenant: { userId } },
-    orderBy: { createdAt: 'desc' },
-  });
+    let confirmedRevenue = 0;
+    let pendingRevenue = 0;
+    let waitlistCount = 0;
+    let newLeads = 0;
+    
+    let totalLeadsCount = leads.length;
+    let convertedLeadsCount = 0;
 
-  const activeTours = tours.filter((t: any) => t.status === 'ACTIVE').length;
-  const draftTours = tours.filter((t: any) => t.status !== 'ACTIVE').length;
+    leads.forEach(lead => {
+        if (lead.status === 'CONFIRMED') {
+            confirmedRevenue += lead.totalPrice;
+            convertedLeadsCount++; 
+        }
+        if (lead.status === 'PENDING') {
+            pendingRevenue += lead.totalPrice;
+            newLeads++;
+        }
+        if (lead.isWaitlist && lead.status !== 'CANCELLED') waitlistCount++;
+    });
 
-  return (
-    <>
-      <style>{`
-        .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-bottom: 28px; }
-        .stat-card { background: #fff; border-radius: 14px; padding: 22px 24px; border: 1px solid #E5E9F2; display: flex; align-items: center; gap: 16px; transition: box-shadow 0.15s; }
-        .stat-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
-        .stat-icon { width: 46px; height: 46px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .stat-icon-blue  { background: #EFF6FF; color: #2563EB; }
-        .stat-icon-green { background: #F0FDF4; color: #16A34A; }
-        .stat-icon-amber { background: #FFFBEB; color: #D97706; }
-        .stat-value { font-size: 26px; font-weight: 700; color: #0A1628; line-height: 1; font-family: 'DM Serif Display', serif; }
-        .stat-label { font-size: 12px; color: #8A93A7; font-weight: 500; margin-top: 3px; text-transform: uppercase; letter-spacing: 0.06em; }
+    const conversionRate = totalLeadsCount > 0 
+        ? Math.round((convertedLeadsCount / totalLeadsCount) * 100) 
+        : 0;
 
-        .table-card { background: #fff; border-radius: 16px; border: 1px solid #E5E9F2; overflow: hidden; }
-        .table-card-header { padding: 20px 24px; border-bottom: 1px solid #F0F2F7; display: flex; align-items: center; justify-content: space-between; }
-        .table-card-title { font-size: 15px; font-weight: 700; color: #0A1628; letter-spacing: -0.01em; }
-        .table-card-count { font-size: 12px; color: #8A93A7; font-weight: 500; margin-top: 2px; }
-        table { width: 100%; border-collapse: collapse; }
-        thead { background: #F7F9FC; }
-        thead th { padding: 12px 20px; font-size: 11px; font-weight: 700; color: #8A93A7; text-transform: uppercase; letter-spacing: 0.08em; text-align: left; border-bottom: 1px solid #E5E9F2; }
-        thead th:last-child { text-align: right; }
-        tbody tr { border-bottom: 1px solid #F0F2F7; transition: background 0.1s; }
-        tbody tr:last-child { border-bottom: none; }
-        tbody tr:hover { background: #F7F9FC; }
-        tbody td { padding: 14px 20px; vertical-align: middle; }
-        .tour-title { font-size: 14px; font-weight: 600; color: #0A1628; }
-        .tour-meta { font-size: 12px; color: #8A93A7; margin-top: 2px; }
-        .badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
-        .badge-active { background: #F0FDF4; color: #15803D; }
-        .badge-draft  { background: #F3F4F6; color: #6B7280; }
-        .badge-active::before, .badge-draft::before { content: ''; width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
-        .badge-active::before { background: #22C55E; }
-        .badge-draft::before  { background: #9CA3AF; }
-        .price-cell { font-size: 14px; font-weight: 600; color: #0A1628; }
-        .action-btns { display: flex; justify-content: flex-end; gap: 6px; align-items: center; }
-        .icon-btn { width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; border: 1.5px solid #E5E9F2; background: transparent; color: #6B7280; transition: all 0.15s; text-decoration: none; }
-        .icon-btn:hover { background: #EFF6FF; color: #2563EB; border-color: #BFDBFE; }
-        .icon-btn.delete:hover { background: #FEF2F2; color: #DC2626; border-color: #FECACA; }
-        .empty-state { text-align: center; padding: 64px 24px; color: #9CA3AF; }
-        .empty-state-icon { width: 56px; height: 56px; background: #F3F4F6; border-radius: 14px; display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; }
-        .empty-state p { font-size: 14px; font-weight: 500; }
-        @media (max-width: 1024px) { .stats-row { grid-template-columns: 1fr 1fr; } }
-        @media (max-width: 640px) { .stats-row { grid-template-columns: 1fr; } }
-      `}</style>
+    const upcomingTours = await prisma.tour.findMany({
+        where: { tenantId: tenant.id },
+        orderBy: { createdAt: 'desc' }, 
+        take: 4,
+        include: {
+            _count: {
+                select: { bookings: { where: { status: 'CONFIRMED' } } }
+            }
+        }
+    });
 
-      {/* TOP BAR */}
-      <header className="topbar">
-        <div>
-          <div className="topbar-title">Dashboard</div>
-          <div className="topbar-breadcrumb">Overview of all tour listings</div>
-        </div>
-        <div className="topbar-actions">
-          <Link href="/admin/leads" className="btn btn-ghost">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width={"16px"} height={"16px"}><path fill="currentColor" d="M112.8 10.9c27.3-9.1 57 3.9 68.9 30l39.7 87.3c10.6 23.4 4 51-16 67.1l-24.2 19.3c25.5 50 65.5 91.4 114.4 118.8l21.2-26.6c16.1-20.1 43.7-26.7 67.1-16l87.3 39.7c26.2 11.9 39.1 41.6 30 68.9-20.7 62.3-83.7 116.2-160.9 102.6-173.7-30.6-299.6-156.5-330.2-330.2-13.6-77.2 40.4-140.1 102.6-160.9zm25.2 49.9c-1.7-3.8-6-5.7-10-4.4-45.2 15.1-79.1 58.6-70.5 107 27.1 153.8 137.4 264.2 291.2 291.3 48.4 8.5 91.9-25.3 107-70.5 1.3-4-.6-8.3-4.4-10L364 334.4c-3.4-1.5-7.4-.6-9.7 2.3l-33.5 41.9c-7 8.7-19 11.5-29 6.7-72.5-34.4-130.5-94.3-162.4-168.2-4.3-9.9-1.4-21.5 7-28.2l38.9-31.1c2.9-2.3 3.9-6.3 2.3-9.7L137.9 60.7z"/></svg>
-            View Leads
-          </Link>
-          <Link href="/admin/add-tour" className="btn btn-blue ">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Add New Tour
-          </Link>
-        </div>
-      </header>
+    const recentBookings = await prisma.booking.findMany({
+        where: { tenantId: tenant.id },
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+        include: { 
+            tour: { select: { title: true } } 
+        }
+    });
 
-      {/* PAGE BODY */}
-      <div className="page-body">
-        <div className="stats-row">
-          <div className="stat-card">
-            <div className="stat-icon stat-icon-blue"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>
-            <div><div className="stat-value" style={{fontFamily:"var(--font-poppins)", fontWeight:"600"}}>{tours.length}</div><div className="stat-label" style={{fontFamily:"var(--font-poppins)"}}>Total Tours</div></div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-icon stat-icon-green"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
-            <div><div className="stat-value" style={{fontFamily:"var(--font-poppins)", fontWeight:"600"}}>{activeTours}</div><div className="stat-label" style={{fontFamily:"var(--font-poppins)"}}>Active Listings</div></div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-icon stat-icon-amber"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
-            <div><div className="stat-value" style={{fontFamily:"var(--font-poppins)", fontWeight:"600"}}>{draftTours}</div><div className="stat-label" style={{fontFamily:"var(--font-poppins)"}}>Draft Tours</div></div>
-          </div>
-        </div>
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const revenueByMonth = monthNames.map(month => ({ name: month, revenue: 0 }));
 
-        <div className="table-card">
-          <div className="table-card-header">
-            <div>
-              <div className="table-card-title">Tour Listings</div>
-              <div className="table-card-count">{tours.length} total packages</div>
+    leads.forEach(lead => {
+        if (lead.status === 'CONFIRMED') {
+            const monthIndex = new Date(lead.createdAt).getMonth(); 
+            revenueByMonth[monthIndex].revenue += lead.totalPrice;
+        }
+    });
+
+    const statusData = [
+        { name: 'Confirmed', value: leads.filter(l => l.status === 'CONFIRMED').length, fill: '#10B981' }, 
+        { name: 'Pending', value: leads.filter(l => l.status === 'PENDING').length, fill: '#F59E0B' }, 
+        { name: 'Cancelled', value: leads.filter(l => l.status === 'CANCELLED').length, fill: '#EF4444' }  
+    ];
+
+    return (
+        <main className="min-h-screen bg-[#F4F7F9] py-6 md:py-10 px-4 sm:px-6 lg:px-8 transition-colors duration-300 dash-bg-main">
+            <div className="max-w-7xl mx-auto space-y-6 md:space-y-10">
+                
+                <style>{`
+                  /* 🛡️ GUARANTEED DARK MODE OVERRIDES 🛡️ */
+                  html.dark .dash-bg-main { background-color: #0F172A !important; }
+                  html.dark .dash-bg-card { background-color: #1E293B !important; border-color: #334155 !important; }
+                  html.dark .dash-bg-muted { background-color: rgba(30, 41, 59, 0.5) !important; border-color: #334155 !important; }
+                  html.dark .dash-bg-icon { background-color: rgba(59, 130, 246, 0.1) !important; border-color: #1E293B !important; color: #60A5FA !important; }
+                  
+                  html.dark .dash-text-primary { color: #FFFFFF !important; }
+                  html.dark .dash-text-secondary { color: #94A3B8 !important; }
+                  html.dark .dash-text-blue { color: #60A5FA !important; }
+                  html.dark .dash-text-green { color: #4ADE80 !important; }
+                  html.dark .dash-text-orange { color: #FB923C !important; }
+                  html.dark .dash-text-emerald { color: #10B981 !important; }
+                  
+                  html.dark .dash-border-main { border-color: #334155 !important; }
+                  
+                  html.dark .dash-btn-secondary { background-color: #1E293B !important; border-color: #475569 !important; color: #E2E8F0 !important; }
+                  html.dark .dash-btn-secondary:hover { background-color: #334155 !important; }
+                  
+                  html.dark .dash-timeline-line { background-color: #334155 !important; }
+                  html.dark .dash-date-badge { background-color: #1E293B !important; border-color: #475569 !important; color: #94A3B8 !important; }
+                  html.dark .dash-empty-box { background-color: rgba(30, 41, 59, 0.3) !important; border-color: #334155 !important; }
+
+                  /* Stat Cards Custom overrides */
+                  .stat-card { background: #fff; border-radius: 20px; padding: 24px;  box-shadow: 0 4px 20px rgba(0,0,0,0.03); display: flex; flex-direction: column; justify-content: center; transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.3s, border-color 0.3s; }
+                  .stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,0.06); }
+                  
+                  /* 👇 Fixed border overrides: Only target top, left, right so the bottom border stays colorful! */
+                  html.dark .stat-card { 
+                      background-color: #1E293B !important; 
+                      border-top-color: #334155 !important;
+                      border-left-color: #334155 !important;
+                      border-right-color: #334155 !important;
+                  }
+                  html.dark .stat-card:hover { box-shadow: 0 8px 30px rgba(0,0,0,0.5); }
+                  
+                  .stat-card-title { font-size: 11px; font-weight: 800; color: #8A93A7; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; transition: color 0.3s; }
+                  html.dark .stat-card-title { color: #94A3B8 !important; }
+                  
+                  .stat-card-value { font-weight: 900; font-family: 'DM Serif Display', serif; line-height: 1.1; transition: color 0.3s; }
+
+                  /* Polyfills for card icon colors and gradient in dark mode */
+                  html.dark .dash-icon-bg { opacity: 0.15 !important; }
+
+                  /* Confirmed Revenue Card */
+                  .stat-card-green { background-image: linear-gradient(to bottom right, white, #f0fdf4); }
+                  html.dark .stat-card-green { background-image: linear-gradient(to bottom right, #1E293B, rgba(16, 185, 129, 0.1)) !important; border-bottom-color: #22C55E !important; }
+                  html.dark .dash-icon-green { color: #10B981 !important; }
+
+                  /* Pending Revenue Card */
+                  .stat-card-amber { background-image: linear-gradient(to bottom right, white, #fffbeb); }
+                  html.dark .stat-card-amber { background-image: linear-gradient(to bottom right, #1E293B, rgba(245, 158, 11, 0.1)) !important; border-bottom-color: #F59E0B !important; }
+                  html.dark .dash-icon-amber { color: #F59E0B !important; }
+
+                  /* Pending Leads Card */
+                  .stat-card-blue { background-image: linear-gradient(to bottom right, white, #eff6ff); }
+                  html.dark .stat-card-blue { background-image: linear-gradient(to bottom right, #1E293B, rgba(59, 130, 246, 0.1)) !important; border-bottom-color: #3B82F6 !important; }
+                  html.dark .dash-icon-blue { color: #3B82F6 !important; }
+
+                  /* Waitlist Leads Card */
+                  .stat-card-orange { background-image: linear-gradient(to bottom right, white, #fff7ed); }
+                  html.dark .stat-card-orange { background-image: linear-gradient(to bottom right, #1E293B, rgba(249, 115, 22, 0.1)) !important; border-bottom-color: #F97316 !important; }
+                  html.dark .dash-icon-orange { color: #F97316 !important; }
+
+                  /* Conversion Rate Card */
+                  .stat-card-emerald { background-image: linear-gradient(to bottom right, white, #ecfdf5); }
+                  html.dark .stat-card-emerald { background-image: linear-gradient(to bottom right, #1E293B, rgba(16, 185, 129, 0.1)) !important; border-bottom-color: #10B981 !important; }
+                  html.dark .dash-icon-emerald { color: #10B981 !important; opacity: 0.15 !important; }
+                `}</style>
+
+                {/* HEADER */}
+                <header className="bg-white rounded-[24px] p-6 sm:p-8 md:p-10 border border-gray-100 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6 transition-colors dash-bg-card">
+                    <div>
+                        <h1 className="text-2xl md:text-3xl font-black text-[#0A1628] tracking-tight dash-text-primary" style={{fontFamily: 'var(--font-poppins)', fontWeight:"700"}}>Agency Overview</h1>
+                        <p className="text-sm font-medium text-gray-500 mt-2 dash-text-secondary">Welcome back. Here is your current business performance.</p>
+                    </div>
+                    <div className="flex flex-col sm:flex-row w-full md:w-auto gap-3">
+                        {canManageTours && (
+                            <Link href="/admin/tours" className="w-full sm:w-auto text-center bg-gray-50 border border-gray-200 hover:bg-gray-100 text-gray-700 px-6 py-3 rounded-xl text-sm font-bold transition-colors dash-btn-secondary">
+                                Manage Tours
+                            </Link>
+                        )}
+                        <Link href="/admin/leads" className="w-full sm:w-auto text-center bg-[#2563EB] hover:bg-[#1D4ED8] text-white px-6 py-3 rounded-xl text-sm font-bold transition-colors shadow-md">
+                            View Leads
+                        </Link>
+                    </div>
+                </header>
+
+                {/* METRICS SECTION */}
+                <section>
+                    <h2 className="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-2 mt-2 dash-text-secondary">Top Level Metrics</h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 md:gap-6">
+                        
+                        <div className="stat-card border-b-[6px] border-b-green-500 relative overflow-hidden stat-card-green">
+                            <div className="absolute top-4 right-4 text-green-500 opacity-20 dash-icon-bg dash-icon-green dash-text-green">
+                                <DollarSign size={48} strokeWidth={3} />
+                            </div>
+                            <div className="stat-card-title z-10 relative">Confirmed Revenue</div>
+                            <div className="stat-card-value text-green-600 text-2xl md:text-[32px] dash-text-green z-10 relative" style={{fontFamily: 'var(--font-poppins)', fontWeight:"600"}}>
+                                Rs. {confirmedRevenue.toLocaleString()}
+                            </div>
+                            <div className="text-[10px] text-gray-400 font-bold flex gap-1 mt-1 z-10 relative dash-text-secondary">
+                                Confirmed Leads <ArrowRight size={10} className="inline" /> Total Revenue
+                            </div>
+                        </div>
+                        
+                        <div className="stat-card border-b-[6px] border-b-amber-500 relative overflow-hidden stat-card-amber">
+                            <div className="absolute top-4 right-4 text-orange-500 opacity-20 dash-icon-bg dash-icon-amber dash-text-orange">
+                                <CreditCard size={48} strokeWidth={3} />
+                            </div>
+                            <div className="stat-card-title z-10 relative">Pending Revenue</div>
+                            <div className="stat-card-value text-orange-500 text-2xl md:text-[32px] dash-text-orange z-10 relative" style={{fontFamily: 'var(--font-poppins)', fontWeight:"600"}}>
+                                Rs. {pendingRevenue.toLocaleString()}
+                            </div>
+                            <div className="text-[10px] text-gray-400 font-bold flex gap-1 mt-1 z-10 relative dash-text-secondary">
+                                Pending leads <ArrowRight size={10} className="inline" /> Expected Revenue
+                            </div>
+                        </div>
+
+                        <div className="stat-card border-b-[6px] border-b-blue-500 relative overflow-hidden stat-card-blue">
+                            <div className="absolute top-4 right-4 text-blue-500 opacity-20 dash-icon-bg dash-icon-blue dash-text-blue">
+                                <Users size={48} strokeWidth={3} />
+                            </div>
+                            <div className="stat-card-title z-10 relative">Pending Leads</div>
+                            <div className="stat-card-value text-blue-500 text-2xl md:text-[32px] dash-text-blue z-10 relative" style={{fontFamily: 'var(--font-poppins)', fontWeight:"600"}}>{newLeads}</div>
+                            <div className="text-[10px] text-gray-400 font-bold flex gap-1 mt-1 z-10 relative dash-text-secondary">
+                                Active leads <ArrowRight size={10} className="inline" /> Total Leads
+                            </div>
+                        </div>
+
+                        <div className="stat-card border-b-[6px] border-b-orange-500 relative overflow-hidden stat-card-orange">
+                            <div className="absolute top-4 right-4 text-orange-500 opacity-20 dash-icon-bg dash-icon-orange dash-text-orange">
+                                <Clock size={48} strokeWidth={3} />
+                            </div>
+                            <div className="stat-card-title z-10 relative">Leads On Waitlist</div>
+                            <div className="stat-card-value text-orange-500 text-2xl md:text-[32px] dash-text-orange z-10 relative" style={{fontFamily: 'var(--font-poppins)', fontWeight:"600"}}>{waitlistCount}</div>
+                            <div className="text-[10px] text-gray-400 font-bold flex gap-1 mt-1 z-10 relative dash-text-secondary">
+                                Waitlist leads <ArrowRight size={10} className="inline" /> Total Waitlist
+                            </div>
+                        </div>
+
+                        {/* Used Inline Styles here to bypass Tailwind compiler issues for arbitrary hex colors */}
+                        <div 
+                            className="stat-card border-b-[6px] relative overflow-hidden stat-card-emerald sm:col-span-2 lg:col-span-1 xl:col-span-1"
+                            style={{ borderBottomColor: '#10B981' }}
+                        >
+                            <div className="absolute top-4 right-4 opacity-20 dash-icon-emerald" style={{ color: '#10B981' }}>
+                                <TrendingUp size={48} strokeWidth={3} />
+                            </div>
+                            <div className="stat-card-title z-10 relative">Conversion Rate</div>
+                            <div className="stat-card-value dash-text-emerald text-3xl md:text-[36px] z-10 relative flex items-baseline gap-1" style={{fontFamily: 'var(--font-poppins)', fontWeight:"800", color: '#10B981'}}>
+                                {conversionRate}%
+                            </div>
+                            <div className="text-[10px] text-gray-400 font-bold flex gap-1 mt-1 z-10 relative dash-text-secondary">
+                                Leads <ArrowRight size={10} className="inline" /> Converted
+                            </div>
+                        </div>
+
+                    </div>
+                </section>
+
+                {/* CHARTS SECTION */}
+                <DashboardCharts revenueData={revenueByMonth} statusData={statusData} />
+
+                {/* BOTTOM SECTION: Operations & Activity */}
+                <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                    
+                    {/* UPCOMING DEPARTURES */}
+                    <div className="xl:col-span-2 bg-white rounded-[24px] shadow-sm border border-gray-100 p-6 md:p-8 transition-colors dash-bg-card">
+                        <div className="flex items-center justify-between mb-8">
+                            <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest flex items-center gap-2 dash-text-secondary">
+                                <Calendar size={16} className="text-[#2563EB] dash-text-blue" />
+                                Active Campaigns
+                            </h3>
+                            
+                            {canManageTours && (
+                                <Link href="/admin/tours" className="text-xs font-bold text-[#2563EB] hover:text-blue-800 flex items-center gap-1 dash-text-blue">
+                                    View All <ArrowRight size={14} />
+                                </Link>
+                            )}
+                        </div>
+                        
+                        <div className="space-y-4">
+                            {upcomingTours.length === 0 ? (
+                                <div className="bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl p-8 text-center dash-empty-box">
+                                     <p className="text-sm text-gray-500 font-medium dash-text-secondary">No active tours right now.</p>
+                                </div>
+                            ) : (
+                                upcomingTours.map((tour) => {
+                                    const capacity = tour.maxCapacity || 20; 
+                                    const booked = tour._count.bookings;
+                                    const fillPercentage = capacity > 0 ? Math.min(100, Math.round((booked / capacity) * 100)) : 0;
+                                    
+                                    return (
+                                        <div key={tour.id} className="p-4 sm:p-5 rounded-2xl border border-gray-100 hover:border-blue-100 bg-white transition-all shadow-sm hover:shadow-md flex flex-col md:flex-row gap-5 md:items-center justify-between dash-bg-card dash-border-main">
+                                            <div className="flex-1 w-full min-w-0"> 
+                                                <h4 className="font-bold text-gray-900 text-base md:text-lg truncate dash-text-primary">{tour.title}</h4>
+                                                <div className="text-[13px] text-gray-500 font-medium mt-2 flex flex-wrap items-center gap-4 dash-text-secondary">
+                                                    <span className="flex items-center gap-1.5 shrink-0"><Clock size={14} className="text-blue-500 dash-text-blue" /> {tour.duration}</span>
+                                                    <span className="flex items-center gap-1.5 truncate"><MapPin size={14} className="text-orange-500 dash-text-orange shrink-0" /> <span className="truncate">{tour.destination}</span></span>
+                                                </div>
+                                            </div>
+                                            
+                                            <div className="w-full md:w-64 shrink-0 bg-gray-50 p-4 rounded-xl border border-gray-100 transition-colors dash-bg-muted dash-border-main">
+                                                <div className="flex justify-between text-xs font-bold mb-2.5">
+                                                    <span className="text-gray-400 uppercase tracking-wider text-[10px] dash-text-secondary">Bookings vs Target</span>
+                                                    <span className={fillPercentage >= 90 ? "text-green-600 dash-text-green" : "text-gray-900 dash-text-primary"}>
+                                                        {booked} / {capacity > 0 ? capacity : '∞'}
+                                                    </span>
+                                                </div>
+                                                <div className="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-2 overflow-hidden transition-colors">
+                                                    <div 
+                                                        className={`h-full rounded-full transition-all duration-1000 ease-out ${fillPercentage >= 90 ? 'bg-green-500' : 'bg-[#2563EB]'}`} 
+                                                        style={{ width: `${fillPercentage}%` }}
+                                                    ></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })
+                            )}
+                        </div>
+                    </div>
+
+                    {/* RECENT ACTIVITY FEED */}
+                    <div className="bg-white rounded-[24px] shadow-sm border border-gray-100 p-6 md:p-8 transition-colors dash-bg-card">
+                        <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest flex items-center gap-2 mb-8 dash-text-secondary">
+                            <Activity size={16} className="text-green-500 dash-text-green" />
+                            Live Activity
+                        </h3>
+                        
+                        {recentBookings.length === 0 ? (
+                            <div className="bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl p-8 text-center dash-empty-box">
+                                <p className="text-sm text-gray-500 font-medium dash-text-secondary">No recent bookings.</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                {recentBookings.map((booking, index) => (
+                                    <div key={booking.id} className="flex gap-4 relative">
+                                        
+                                        {/* Vertical Connecting Line */}
+                                        {index !== recentBookings.length - 1 && (
+                                            <div className="absolute left-5 top-10 bottom-[-16px] w-[2px] bg-gray-100 dash-timeline-line transition-colors"></div>
+                                        )}
+                                        
+                                        {/* Icon Container */}
+                                        <div className="shrink-0 w-10 h-10 rounded-full bg-blue-50 border-[3px] border-white shadow-sm flex items-center justify-center relative z-10 text-[#2563EB] transition-colors dash-bg-icon">
+                                            <Users size={16} />
+                                        </div>
+                                        
+                                        {/* Content Card */}
+                                        <div className="flex-1 bg-gray-50 border border-gray-100 rounded-xl p-4 shadow-sm transition-colors dash-bg-muted dash-border-main">
+                                            <div className="flex justify-between items-start gap-2 mb-1.5">
+                                                <span className="font-bold text-gray-900 text-sm break-words dash-text-primary">{booking.customerName}</span>
+                                                <span className="text-[10px] font-bold text-gray-500 bg-white border border-gray-200 px-2 py-1 rounded-md shrink-0 transition-colors dash-date-badge">
+                                                    {new Date(booking.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                                                </span>
+                                            </div>
+                                            <p className="text-xs text-gray-500 mt-1 leading-relaxed dash-text-secondary">
+                                                Booked <strong className="text-gray-800 dash-text-primary">{booking.tour?.title || 'a tour'}</strong>
+                                            </p>
+                                        </div>
+
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                </div>
+
             </div>
-          </div>
-          <div style={{ overflowX: 'auto' }}>
-            <table>
-              <thead>
-                <tr><th>Tour Details</th><th>Status</th><th>Booking Option</th><th>Price</th><th style={{ textAlign: 'right' }}>Actions</th></tr>
-              </thead>
-              <tbody>
-                {tours.map((tour: any) => (
-                  <tr key={tour.id}>
-                    <td><div className="tour-title">{tour.title}</div><div className="tour-meta">{tour.destination} &nbsp;·&nbsp; {tour.duration}</div></td>
-                    <td>{tour.status === 'ACTIVE' ? <span className="badge badge-active">Active</span> : <span className="badge badge-draft">Draft</span>}</td>
-                    <td><BookingModeDropdown tourId={tour.id} currentMode={tour.bookingMode || 'BOTH'} /></td>
-                    <td><span className="price-cell">Rs. {tour.basePrice.toLocaleString()}</span></td>
-                    <td>
-                      <div className="action-btns">
-                        <Link href={`/admin/edit-tour/${tour.id}`} className="icon-btn" title="Edit Tour"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></Link>
-                        <div className="icon-btn delete"><DeleteTourButton tourId={tour.id} /></div>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          {tours.length === 0 && (
-            <div className="empty-state">
-              <div className="empty-state-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg></div>
-              <p>No tours yet. Add your first tour to get started.</p>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* FOOTER */}
-      <footer className="dash-footer">
-        <p>© 2026 Travelo TMS — A product by Axius Digital</p>
-        <p>All rights reserved.</p>
-      </footer>
-    </>
-  );
+        </main>
+    );
 }

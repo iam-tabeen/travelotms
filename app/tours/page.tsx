@@ -19,12 +19,21 @@ export default async function ToursPage({
   const search = params?.search || '';
   const sort = params?.sort || 'newest';
 
+  // --- THE BULLETPROOF ID SWITCHER ---
+  const targetTenantId = process.env.NODE_ENV === 'development'
+    ? 'local-agency-123' // <--- Paste your Prisma Studio Sandbox ID here!
+    : '0a469103-94a5-45cf-859d-4dd2fe1d4586'; // Live Vercel ID
+
   // 4. Determine the sorting logic (Price & Date only!)
   let orderBy: any = { createdAt: 'desc' };
   if (sort === 'price_asc') orderBy = { basePrice: 'asc' };
   if (sort === 'price_desc') orderBy = { basePrice: 'desc' };
-  // Fetch the tenant AND heavily filter the active tours
-  const tenant = await prisma.tenant.findFirst({
+
+  // Fetch the EXACT tenant AND heavily filter the active tours
+  const tenant = await prisma.tenant.findUnique({
+    where: {
+      id: targetTenantId
+    },
     include: {
       tours: {
         where: { 
@@ -42,8 +51,6 @@ export default async function ToursPage({
     }
   });
 
-  // ... your existing prisma.tenant.findFirst(...) block ...
-
   // THE FIX: Intercept the tours and mathematically sort them by ripping out the text!
   if (tenant && tenant.tours) {
     if (sort === 'duration_asc') {
@@ -52,9 +59,6 @@ export default async function ToursPage({
       tenant.tours.sort((a: any, b: any) => parseInt(b.duration) - parseInt(a.duration));
     }
   }
-
-
-// ... rest of your code ...
 
   if (!tenant) {
     return (

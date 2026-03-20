@@ -10,7 +10,7 @@ export async function updateAgencySettings(formData: FormData) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
-  // THE FIX: We generate a 100% guaranteed unique email using your local Clerk ID.
+  // We generate a 100% guaranteed unique email using your local Clerk ID.
   // This ensures your local development never collides with your live Supabase data!
   const guaranteedUniqueEmail = `admin-${userId}@axius.local`;
 
@@ -43,12 +43,22 @@ export async function updateAgencySettings(formData: FormData) {
 
     const companyName = (formData.get('companyName') as string) || "Axius Agency";
     const safeSubdomain = companyName.toLowerCase().replace(/[^a-z0-9]/g, '') + Date.now().toString().slice(-4);
+    
+    // --- Extract backup email from the form data ---
+    const backupEmailInput = formData.get('backupEmail') as string;
+    const finalBackupEmail = backupEmailInput ? backupEmailInput : null;
+
+    // --- NEW: Extract the Financial Setting Checkbox ---
+    // If the checkbox is checked, it sends 'true', otherwise it returns null
+    const allowPartialPayments = formData.get('allowPartialPayments') === 'true';
 
     await prisma.tenant.upsert({
       where: { userId: userId },
       update: {
         companyName: companyName,
         logoUrl: finalLogoUrl,
+        backupEmail: finalBackupEmail, 
+        allowPartialPayments: allowPartialPayments, // <-- Added here
         primaryColor: (formData.get('primaryColor') as string) || "#003580",
         accentColor: (formData.get('accentColor') as string) || "#FF8C00",
         navbarColor: (formData.get('navbarColor') as string) || "#003580",
@@ -60,10 +70,12 @@ export async function updateAgencySettings(formData: FormData) {
       },
       create: {
         userId: userId,
-        adminEmail: guaranteedUniqueEmail, // <-- Placed the unique email here!
+        adminEmail: guaranteedUniqueEmail,
         subdomain: safeSubdomain,
         companyName: companyName,
         logoUrl: finalLogoUrl,
+        backupEmail: finalBackupEmail, 
+        allowPartialPayments: allowPartialPayments, // <-- Added here
         primaryColor: (formData.get('primaryColor') as string) || "#003580",
         accentColor: (formData.get('accentColor') as string) || "#FF8C00",
         navbarColor: (formData.get('navbarColor') as string) || "#003580",
@@ -83,6 +95,7 @@ export async function updateAgencySettings(formData: FormData) {
 
   // Redirect to Dashboard after successful save
   revalidatePath('/admin/settings');
+  revalidatePath('/admin/backups'); 
   revalidatePath('/');
   redirect('/admin'); 
-}
+} 

@@ -14,16 +14,27 @@ type Props = {
 export default async function TourDetail({ params }: Props) {
   const { id } = await params;
 
-  const tenant = await prisma.tenant.findFirst({
+  // 1. Fetch the tour AND the specific tenant that owns it in ONE query!
+  const tour = await prisma.tour.findUnique({
+    where: { 
+      id: id,
+      status: 'ACTIVE' 
+    },
     include: {
-      tours: {
-        where: { status: 'ACTIVE' },
-        orderBy: { createdAt: 'desc' }
-      }
+      itineraryDays: {
+        orderBy: { dayNumber: 'asc' } 
+      },
+      tenant: true // <--- THIS FIXES THE MULTI-TENANCY BUG!
     }
   });
 
-  if (!tenant) return null;
+  // If the tour doesn't exist, or it has no owner, show 404
+  if (!tour || !tour.tenant) {
+    notFound();
+  }
+
+  // Extract the specific tenant that owns this tour
+  const tenant = tour.tenant;
 
   const globalTheme = {
     // 1. Your existing dynamic theme variables
@@ -41,24 +52,7 @@ export default async function TourDetail({ params }: Props) {
     '--axius-secondary': tenant.headingColor || '#1F2937',
   } as React.CSSProperties;
 
-  // Fetch the tour data
-  const tour = await prisma.tour.findUnique({
-    where: { 
-      id: id,
-      status: 'ACTIVE' 
-    },
-    include: {
-      itineraryDays: {
-        orderBy: { dayNumber: 'asc' } 
-      }
-    }
-  });
-
-  if (!tour) {
-    notFound();
-  }
-
-  // --- NEW: Calculate the correct fixed date string to pass to the form ---
+  // --- Calculate the correct fixed date string to pass to the form ---
   let calculatedFixedDate: string | undefined = undefined;
   
   if (tour.departureType === 'CUSTOM_DATE' && tour.departureDate) {
@@ -84,8 +78,12 @@ export default async function TourDetail({ params }: Props) {
       <Navbar companyName={tenant.companyName} logoUrl={tenant.logoUrl} />
 
       <div className="bg-gray-50 pt-20"> 
-        {/* Pass the calculated date into TourClient! */}
-        <TourClient tour={tour} fixedDate={calculatedFixedDate} />
+        <TourClient 
+          tour={tour} 
+          fixedDate={calculatedFixedDate} 
+          // THE FIX: We pass the exact tenant's plan tier down to the Client Component
+          isPro={tenant.planTier === 'PRO'} 
+        />
       </div>
 
       <Footer companyName={tenant.companyName} logoUrl={tenant.logoUrl} />

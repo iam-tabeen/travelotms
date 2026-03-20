@@ -2,7 +2,6 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { wrap } from 'module';
 
-
 function getDepartureDisplay(tour) {
   // 1. If it's client choice, just return the text
   if (tour.departureType !== 'CUSTOM_DATE' || !tour.departureDate) {
@@ -16,7 +15,7 @@ function getDepartureDisplay(tour) {
     const today = new Date();
     // Create a target date using THIS current year
     let targetDate = new Date(today.getFullYear(), d.getMonth(), d.getDate());
-    
+
     // If the date has already passed this year, automatically bump it to next year!
     if (targetDate < today) {
       targetDate.setFullYear(today.getFullYear() + 1);
@@ -58,6 +57,12 @@ export default function TourCard({ tour }) {
     );
   };
 
+  // --- FOMO CAPACITY LOGIC ---
+  const hasCapacityLimit = tour.maxCapacity !== null && tour.maxCapacity !== undefined;
+  const availableSpots = hasCapacityLimit ? tour.maxCapacity - (tour.bookedSpots || 0) : null;
+  const isSoldOut = hasCapacityLimit && availableSpots <= 0;
+  const isAlmostFull = hasCapacityLimit && availableSpots > 0 && availableSpots <= 5;
+
   return (
     <div className="w-full bg-white rounded-xl shadow-xl overflow-hidden transform transition duration-500 hover:scale-105 flex flex-col h-full border border-gray-100">
 
@@ -68,8 +73,23 @@ export default function TourCard({ tour }) {
           src={tour.coverImage || "https://images.unsplash.com/photo-1540206395-68808572332f?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"}
           alt={tour.title}
         />
-        {/* Top Right Badge */}
-        <div style={{background:"rgba(0, 0, 0, 0.42)"}} className="absolute top-0 right-0  text-white px-3 py-1.5 m-3 rounded-md text-xs font-bold tracking-widest uppercase shadow-md">
+        
+        {/* --- LEFT FOMO BADGE --- */}
+        {hasCapacityLimit && (
+          <div className="absolute top-0 left-0 m-3 z-10">
+            {isSoldOut ? (
+              <span className="bg-red-600 text-white text-[10px]  uppercase tracking-widest px-3 py-1.5 rounded-md shadow-md" style={{background:"rgba(0, 0, 0, 0.42)", fontFamily:"var(--font-poppins)",  fontWeight:"600"}}>
+Sold out              </span>
+            ) : isAlmostFull ? (
+              <span className=" text-white text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-md shadow-md flex items-center gap-1" style={{background:"rgba(0, 0, 0, 0.42)"}}>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" width={"14px"} height={"18px"}><path fill="#FF8C00" d="M160.5-26.4c9.3-7.8 23-7.5 31.9 .9 12.3 11.6 23.3 24.4 33.9 37.4 13.5 16.5 29.7 38.3 45.3 64.2 5.2-6.8 10-12.8 14.2-17.9 1.1-1.3 2.2-2.7 3.3-4.1 7.9-9.8 17.7-22.1 30.8-22.1 13.4 0 22.8 11.9 30.8 22.1 1.3 1.7 2.6 3.3 3.9 4.8 10.3 12.4 24 30.3 37.7 52.4 27.2 43.9 55.6 106.4 55.6 176.6 0 123.7-100.3 224-224 224S0 411.7 0 288c0-91.1 41.1-170 80.5-225 19.9-27.7 39.7-49.9 54.6-65.1 8.2-8.4 16.5-16.7 25.5-24.2zM225.7 416c25.3 0 47.7-7 68.8-21 42.1-29.4 53.4-88.2 28.1-134.4-4.5-9-16-9.6-22.5-2l-25.2 29.3c-6.6 7.6-18.5 7.4-24.7-.5-17.3-22.1-49.1-62.4-65.3-83-5.4-6.9-15.2-8-21.5-1.9-18.3 17.8-51.5 56.8-51.5 104.3 0 68.6 50.6 109.2 113.7 109.2z"/></svg> {availableSpots} Spots Left
+              </span>
+            ) : null}
+          </div>
+        )}
+
+        {/* Top Right Duration Badge */}
+        <div style={{background:"rgba(0, 0, 0, 0.42)"}} className="absolute top-0 right-0  text-white px-3 py-1.5 m-3 rounded-md text-xs font-bold tracking-widest uppercase shadow-md z-10">
           <span style={{display:"flex"  }} ><svg xmlns="http://www.w3.org/2000/svg"  style={{paddingRight:"8px"}}  width={"22px"} viewBox="0 0 448 512"><path   fill="currentColor"  d="M120 0c13.3 0 24 10.7 24 24l0 40 160 0 0-40c0-13.3 10.7-24 24-24s24 10.7 24 24l0 40 32 0c35.3 0 64 28.7 64 64l0 288c0 35.3-28.7 64-64 64L64 480c-35.3 0-64-28.7-64-64L0 128C0 92.7 28.7 64 64 64l32 0 0-40c0-13.3 10.7-24 24-24zm0 112l-56 0c-8.8 0-16 7.2-16 16l0 48 352 0 0-48c0-8.8-7.2-16-16-16l-264 0zM48 224l0 192c0 8.8 7.2 16 16 16l320 0c8.8 0 16-7.2 16-16l0-192-352 0z"/></svg> {tour.duration} </span>
         </div>
       </div>
