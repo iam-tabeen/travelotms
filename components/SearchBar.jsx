@@ -1,9 +1,10 @@
 "use client";
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useTransition } from 'react';
+import { useTransition, Suspense } from 'react';
 
-export default function SearchBar() {
+// 1. Move all your original SearchBar code into this inner component
+function SearchBarContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
@@ -39,5 +40,15 @@ export default function SearchBar() {
         </div>
       )}
     </div>
+  );
+}
+
+// 2. Export the main component wrapped in Suspense
+export default function SearchBar() {
+  return (
+    // If the URL isn't ready during static build, render a gray skeleton box instead of crashing!
+    <Suspense fallback={<div className="w-full max-w-md h-[46px] bg-gray-100 rounded-xl animate-pulse"></div>}>
+      <SearchBarContent />
+    </Suspense>
   );
 }

@@ -131,6 +131,9 @@ export default async function AdminDashboard() {
                   /* Polyfills for card icon colors and gradient in dark mode */
                   html.dark .dash-icon-bg { opacity: 0.15 !important; }
 
+                  .force-emerald { color: #10B981 !important; }
+.force-emerald-border { border-bottom-color: #10B981 !important; }
+
                   /* Confirmed Revenue Card */
                   .stat-card-green { background-image: linear-gradient(to bottom right, white, #f0fdf4); }
                   html.dark .stat-card-green { background-image: linear-gradient(to bottom right, #1E293B, rgba(16, 185, 129, 0.1)) !important; border-bottom-color: #22C55E !important; }
@@ -229,21 +232,19 @@ export default async function AdminDashboard() {
                         </div>
 
                         {/* Used Inline Styles here to bypass Tailwind compiler issues for arbitrary hex colors */}
-                        <div 
-                            className="stat-card border-b-[6px] relative overflow-hidden stat-card-emerald sm:col-span-2 lg:col-span-1 xl:col-span-1"
-                            style={{ borderBottomColor: '#10B981' }}
-                        >
-                            <div className="absolute top-4 right-4 opacity-20 dash-icon-emerald" style={{ color: '#10B981' }}>
-                                <TrendingUp size={48} strokeWidth={3} />
-                            </div>
-                            <div className="stat-card-title z-10 relative">Conversion Rate</div>
-                            <div className="stat-card-value dash-text-emerald text-3xl md:text-[36px] z-10 relative flex items-baseline gap-1" style={{fontFamily: 'var(--font-poppins)', fontWeight:"800", color: '#10B981'}}>
-                                {conversionRate}%
-                            </div>
-                            <div className="text-[10px] text-gray-400 font-bold flex gap-1 mt-1 z-10 relative dash-text-secondary">
-                                Leads <ArrowRight size={10} className="inline" /> Converted
-                            </div>
-                        </div>
+                        {/* Conversion Rate Card */}
+<div className="stat-card border-b-[6px] relative overflow-hidden stat-card-emerald force-emerald-border sm:col-span-2 lg:col-span-1 xl:col-span-1">
+    <div className="absolute top-4 right-4 opacity-20 force-emerald">
+        <TrendingUp size={48} strokeWidth={3} />
+    </div>
+    <div className="stat-card-title z-10 relative">Conversion Rate</div>
+    <div className="stat-card-value force-emerald text-3xl md:text-[36px] z-10 relative flex items-baseline gap-1" style={{fontFamily: 'var(--font-poppins)', fontWeight:"800"}}>
+        {conversionRate}%
+    </div>
+    <div className="text-[10px] text-gray-400 font-bold flex gap-1 mt-1 z-10 relative dash-text-secondary">
+        Leads <ArrowRight size={10} className="inline" /> Converted
+    </div>
+</div>
 
                     </div>
                 </section>
