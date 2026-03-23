@@ -306,6 +306,8 @@ export default function TourClient({ tour, fixedDate, isPro = false }: { tour: a
                             isSoldOut={(tour.maxCapacity !== null && (tour.maxCapacity - (tour.bookedSpots || 0)) <= 0)}
                             availableSpots={tour.maxCapacity !== null ? (tour.maxCapacity - (tour.bookedSpots || 0)) : null}
                             blockedDates={tour.blockedDates ? JSON.parse(tour.blockedDates) : []} 
+                            apiKey="tm_live_45c617ad1751be6e7e70d56c2714cfc500ee2d53b54daf0357c5f15bc365aa11" 
+  apiUrl="http://travelotms.com"
                             tourAddOns={tour.addOns ? JSON.parse(tour.addOns) : []}
                             isPro={isPro || tour.tenant?.planTier === 'PRO'} 
                         />

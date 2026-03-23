@@ -1,11 +1,11 @@
 "use client";
-import { validatePromoCode } from '@/app/actions/promos';
 import { useState } from 'react';
-import { submitBooking } from '@/app/actions/booking';
 
 export default function BookingForm({ 
   tourId, 
-  tenantId, 
+  tenantId, // Kept for reference if needed
+  apiKey,   // <-- NEW: API Key prop
+  apiUrl,   // <-- NEW: Base API URL prop
   basePrice,
   fixedDate,
   isSoldOut = false,
@@ -16,6 +16,8 @@ export default function BookingForm({
 }: { 
   tourId: string; 
   tenantId: string; 
+  apiKey: string; 
+  apiUrl: string;
   basePrice: number; 
   fixedDate?: string | null; 
   isSoldOut?: boolean;
@@ -54,50 +56,84 @@ export default function BookingForm({
 
   // --- DYNAMIC LOGIC ---
   const isWaitlistMode = isSoldOut || (availableSpots !== null && travelers > availableSpots);
-  const formAction = submitBooking.bind(null, tourId, tenantId, basePrice);
 
-  const handleSubmit = async (formData: FormData) => {
+  // --- HEADLESS SUBMIT HANDLER ---
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault(); // Stop the form from reloading the page
     setIsSubmitting(true);
+    
+    const formData = new FormData(e.currentTarget);
+    const addOnNames = selectedAddOnIndices.map(idx => tourAddOns[idx].name).join(', ');
+
+    const payload = {
+        tourId: tourId,
+        fullName: formData.get('customerName'),
+        email: formData.get('customerEmail'),
+        phone: formData.get('customerPhone'),
+        travelDate: formData.get('travelDate'),
+        travelers: travelers.toString(),
+        specialNotes: formData.get('specialNotes'),
+        selectedAddOns: addOnNames,
+        finalPrice: finalTotal,
+        promoCodeId: appliedPromo ? appliedPromo.id : null,
+        isWaitlist: isWaitlistMode
+    };
+
     try {
-      formData.append('finalPrice', finalTotal.toString());
-      const addOnNames = selectedAddOnIndices.map(idx => tourAddOns[idx].name).join(', ');
-      formData.append('selectedAddOns', addOnNames);
+      const response = await fetch(`${apiUrl}/api/public/bookings`, {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+              'x-api-key': apiKey // Secure the route
+          },
+          body: JSON.stringify(payload)
+      });
 
-      if (appliedPromo) {
-          formData.append('promoCodeId', appliedPromo.id);
+      const result = await response.json();
+
+      if (result.success) {
+          setIsSuccess(true);
+      } else {
+          alert(result.error || "Booking failed.");
       }
-
-      if (isWaitlistMode) {
-          formData.append('isWaitlist', 'true');
-      }
-
-      await formAction(formData);
-      setIsSuccess(true);
     } catch (error) {
-      console.error("Booking failed:", error);
-      alert("Something went wrong. Please try again.");
+      console.error("Booking API Error:", error);
+      alert("Network error. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // --- HEADLESS PROMO VALIDATOR ---
   const handleApplyPromo = async () => {
     if (!promoInput) return;
     setIsCheckingPromo(true);
-    const result = await validatePromoCode(promoInput, tenantId);
-    if (result.error) {
-        setPromoMessage({ text: result.error, type: 'error' });
-        setAppliedPromo(null);
-    } else if (result.success) {
-        setPromoMessage({ text: 'Promo applied!', type: 'success' });
-        setAppliedPromo(result);
-        setPromoInput(''); 
+    setPromoMessage({ text: '', type: '' });
+    
+    try {
+        const response = await fetch(`${apiUrl}/api/public/promos?code=${promoInput}`, {
+            headers: { 'x-api-key': apiKey }
+        });
+        const result = await response.json();
+
+        if (result.error) {
+            setPromoMessage({ text: result.error, type: 'error' });
+            setAppliedPromo(null);
+        } else if (result.success) {
+            setPromoMessage({ text: 'Promo applied!', type: 'success' });
+            setAppliedPromo(result.promo); 
+            setPromoInput(''); 
+        }
+    } catch(err) {
+        setPromoMessage({ text: "Failed to verify promo.", type: 'error' });
+    } finally {
+        setIsCheckingPromo(false);
     }
-    setIsCheckingPromo(false);
   };
 
   const removePromo = () => {
     setAppliedPromo(null);
+    setPromoMessage({ text: '', type: '' });
   };
 
   if (isSuccess) {
@@ -122,7 +158,8 @@ export default function BookingForm({
         {isWaitlistMode ? "Join the Waitlist" : "Request to Book"}
       </h3>
 
-      <form action={handleSubmit} className="space-y-5">
+      {/* Changed action= to onSubmit= */}
+      <form onSubmit={handleSubmit} className="space-y-5">
         
         <div>
           <label className="block text-xs font-black text-axius-secondary uppercase tracking-widest mb-2" style={{fontFamily: 'var(--font-poppins)', fontWeight:"bold"}}>Full Name</label>
@@ -213,7 +250,9 @@ export default function BookingForm({
                           onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
                           className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold uppercase outline-none"
                       />
-                      <button type="button" onClick={handleApplyPromo} className="shrink-0 bg-gray-800 text-white px-4 py-3 rounded-xl text-xs font-black uppercase tracking-widest cursor-pointer hover:bg-gray-700 transition">Apply</button>
+                      <button type="button" onClick={handleApplyPromo} disabled={isCheckingPromo} className="shrink-0 bg-gray-800 text-white px-4 py-3 rounded-xl text-xs font-black uppercase tracking-widest cursor-pointer hover:bg-gray-700 transition disabled:opacity-50">
+                        {isCheckingPromo ? '...' : 'Apply'}
+                      </button>
                   </div>
               ) : (
                   <div className="flex items-center justify-between bg-green-50 border border-green-200 p-3 rounded-xl">
@@ -221,17 +260,21 @@ export default function BookingForm({
                       <button type="button" onClick={removePromo} className="text-[10px] font-bold text-red-500 uppercase cursor-pointer hover:underline">Remove</button>
                   </div>
               )}
+              {/* Optional UI feedback for Promos */}
+              {promoMessage.text && (
+                <p className={`text-xs font-bold mt-2 ${promoMessage.type === 'error' ? 'text-red-500' : 'text-green-600'}`}>
+                  {promoMessage.text}
+                </p>
+              )}
           </div>
         )}
 
         {/* --- LIVE TOTAL --- */}
         <div className="flex justify-between items-end pt-4 border-t border-gray-100 mt-2">
             <div>
-                {/* Only show "Price Summary" if they are PRO OR they selected add-ons */}
                 {(isPro || addonsTotal > 0) && (
                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Price Summary</p>
                 )}
-                {/* Only show Base Price breakdown if they are PRO */}
                 {isPro && (
                     <p className="text-xs text-gray-500 font-medium">Base: Rs. {(basePrice * travelers).toLocaleString()}</p>
                 )}

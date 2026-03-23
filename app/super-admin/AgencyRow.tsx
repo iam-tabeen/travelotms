@@ -1,11 +1,16 @@
 'use client';
 
-import { useTransition } from 'react';
-import { Power, TrendingUp, Users } from 'lucide-react';
+import { useState, useTransition } from 'react';
+import { Power, TrendingUp, Users, Key, Copy, Check } from 'lucide-react';
 import { toggleAgencyAccess, updateAgencyTier } from './actions';
+import { generateApiKey } from '@/app/actions/api-key-actions';
 
 export default function AgencyRow({ agency }: { agency: any }) {
     const [isPending, startTransition] = useTransition();
+    
+    // New states for the API Key UI
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [copied, setCopied] = useState(false);
 
     const handleToggleAccess = () => {
         startTransition(() => {
@@ -17,6 +22,25 @@ export default function AgencyRow({ agency }: { agency: any }) {
         startTransition(() => {
             updateAgencyTier(agency.id, e.target.value);
         });
+    };
+
+    // New handler to generate the key
+    const handleGenerateKey = async () => {
+        setIsGenerating(true);
+        const res = await generateApiKey(agency.id);
+        if (!res.success) {
+            alert(res.message); // Fallback error handling
+        }
+        setIsGenerating(false);
+    };
+
+    // New handler to copy the key
+    const handleCopy = () => {
+        if (agency.apiKey?.key) {
+            navigator.clipboard.writeText(agency.apiKey.key);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000); // Reset checkmark after 2s
+        }
     };
 
     return (
@@ -53,6 +77,33 @@ export default function AgencyRow({ agency }: { agency: any }) {
                     <option value="PRO">PRO</option>
                     {/* <option value="ENTERPRISE">ENTERPRISE</option> */}
                 </select>
+            </td>
+
+            {/* NEW: API KEY COLUMN */}
+            <td className="p-5">
+                {agency.apiKey ? (
+                    <div className="flex items-center gap-2 bg-gray-900 rounded-lg p-2 border border-gray-700 w-fit">
+                        <span className="text-xs font-mono text-gray-400 truncate w-32" title={agency.apiKey.key}>
+                            {agency.apiKey.key.slice(0, 15)}...
+                        </span>
+                        <button 
+                            onClick={handleCopy}
+                            className="text-gray-400 hover:text-white transition-colors p-1 rounded-md"
+                            title="Copy full key"
+                        >
+                            {copied ? <Check size={14} className="text-green-400"/> : <Copy size={14} />}
+                        </button>
+                    </div>
+                ) : (
+                    <button 
+                        onClick={handleGenerateKey}
+                        disabled={isGenerating}
+                        className="flex items-center gap-2 px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-xs font-bold text-white rounded-lg transition-colors disabled:opacity-50"
+                    >
+                        <Key size={14} />
+                        {isGenerating ? 'Generating...' : 'Generate Key'}
+                    </button>
+                )}
             </td>
             
             <td className="p-5 text-right">

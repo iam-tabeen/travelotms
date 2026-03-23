@@ -1,4 +1,3 @@
-import prisma from '@/lib/prisma';
 import Link from 'next/link'; 
 import Navbar from '@/components/lovable/Navbar';
 import TourCard from '@/components/TourCard';
@@ -9,56 +8,63 @@ import GallerySection from '@/components/lovable/GallerySection';
 import TestimonialsSection from '@/components/lovable/TestimonialsSection';
 import CtaBanner from '@/components/lovable/CTASection';
 
-// 1. THE CACHE KILLER: This forces Next.js to always fetch fresh data!
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
   
-  // 2. THE BULLETPROOF ID SWITCHER
-  const targetTenantId = process.env.NODE_ENV === 'development'
-    ? 'local-agency-123' // <--- Paste your Sandbox ID here!
-    : '0a469103-94a5-45cf-859d-4dd2fe1d4586'; // This is your Live Vercel ID
+  // 1. THE HEADLESS CONNECTION
+  // We use fetch() to talk to your SaaS engine via the API Key.
+  // Replace this string with the actual key you generated!
+  const API_KEY = 'tm_live_45c617ad1751be6e7e70d56c2714cfc500ee2d53b54daf0357c5f15bc365aa11'; 
+  const API_URL = 'https://travelotms.com'; // Change to https://app.travelotms.com in production
 
-  // 3. Fetch the correct agency based on the environment
-  const tenant = await prisma.tenant.findUnique({
-    where: { 
-        id: targetTenantId 
-    },
-    include: {
-      tours: {
-        where: { status: 'ACTIVE' },
-        orderBy: { createdAt: 'desc' }
-      }
-    }
+  // 2. FETCH THE DATA
+  const res = await fetch(`${API_URL}/api/public/tours`, {
+    headers: { 'x-api-key': API_KEY },
+    cache: 'no-store' // Equivalent to force-dynamic
   });
 
-  if (!tenant) return null;
+  const data = await res.json();
 
-  // 4. Map database colors to global CSS variables
+  // If the API key is wrong, or the agency is suspended, show the error
+  if (!data.success) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 text-gray-800">
+        <div className="text-center space-y-4">
+          <h1 className="text-4xl font-black text-red-500">Access Denied</h1>
+          <p className="font-medium text-gray-500">{data.error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 3. DESTRUCTURE THE PAYLOAD
+  const { agency, tours } = data;
+
+  // 4. MAP THE API COLORS TO GLOBAL VARIABLES
   const globalTheme = {
-    '--theme-primary': tenant.primaryColor || '#003580',
-    '--theme-accent': tenant.accentColor || '#FF8C00',
-    '--theme-navbar': tenant.navbarColor || '#003580',
-    '--theme-button': tenant.buttonColor || '#FF8C00',
-    '--theme-heading': tenant.headingColor || '#1F2937',
-    '--theme-footer': tenant.footerColor || '#111827', 
-    '--theme-card': tenant.cardColor || '#111827', 
-    '--navlink': tenant.navlink || '#111827', 
+    '--theme-primary': agency.primaryColor || '#003580',
+    '--theme-accent': agency.accentColor || '#FF8C00',
+    '--theme-navbar': agency.navbarColor || '#003580',
+    '--theme-button': agency.buttonColor || '#FF8C00',
+    '--theme-heading': agency.headingColor || '#1F2937',
+    '--theme-footer': agency.footerColor || '#111827', 
+    '--theme-card': agency.cardColor || '#111827', 
+    '--navlink': agency.navlink || '#111827', 
   } as React.CSSProperties;
 
   return (
     <main className="min-h-screen bg-white"  style={globalTheme}>
-
       
-      {/* Clean components without color props! */}
+      {/* Clean components using the API data! */}
       <Navbar 
-        companyName={tenant.companyName} 
-        logoUrl={tenant.logoUrl} 
+        companyName={agency.companyName} 
+        logoUrl={agency.logoUrl} 
       />
       <HeroSection></HeroSection>  
-      <AboutSection agencyName={tenant.companyName} />
+      <AboutSection agencyName={agency.companyName} />
 
-      {/* 4. TOURS GRID SECTION */}
+      {/* TOURS GRID SECTION */}
       <div className="or-spacer" style={{zIndex:"99"}}>
         <div className="mask"></div>
       </div>
@@ -94,13 +100,12 @@ export default async function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-            {/* THE FIX: .slice(0, 3) ensures only a maximum of 3 cards are rendered */}
-            {tenant.tours.slice(0, 3).map((tour: any) => (
+            {tours.slice(0, 3).map((tour: any) => (
               <TourCard key={tour.id} tour={tour} />
             ))}
           </div>
 
-          {tenant.tours.length === 0 && (
+          {tours.length === 0 && (
             <div className="text-center py-24 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200">
               <p className="text-gray-400 font-bold uppercase tracking-widest">
                 More adventures coming soon!
@@ -108,8 +113,7 @@ export default async function HomePage() {
             </div>
           )}
 
-          {/* THE FIX: Conditionally show a "View More" button if there are > 3 tours */}
-          {tenant.tours.length > 3 && (
+          {tours.length > 3 && (
             <div className="mt-16 flex justify-center">
               <Link 
                 href="/tours" 
@@ -146,8 +150,8 @@ export default async function HomePage() {
         <div className="mask" id='footerid'></div>
       </div>
 
-      {/* 5. FOOTER */}
-      <Footer  companyName={tenant.companyName} logoUrl={tenant.logoUrl}></Footer>
+      {/* FOOTER */}
+      <Footer companyName={agency.companyName} logoUrl={agency.logoUrl}></Footer>
     </main>
   );
 }

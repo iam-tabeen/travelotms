@@ -5,7 +5,8 @@ import prisma from '@/lib/prisma';
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*', // In production, you can restrict this to the specific client's domain
     'Access-Control-Allow-Methods': 'GET, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    // IMPORTANT: Added 'x-api-key' to allowed headers so browsers don't block the request
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-api-key',
 };
 
 // Handle OPTIONS request for CORS preflight
@@ -15,21 +16,27 @@ export async function OPTIONS() {
 
 export async function GET(request: Request) {
     try {
-        // 1. Get the Tenant ID from the URL (e.g., ?tenantId=123-abc)
-        const { searchParams } = new URL(request.url);
-        const tenantId = searchParams.get('tenantId');
+        // 1. Get the API Key securely from the Headers (NOT the URL)
+        const apiKey = request.headers.get('x-api-key');
 
-        if (!tenantId) {
-            return NextResponse.json({ error: "Missing tenantId parameter." }, { status: 400, headers: corsHeaders });
+        if (!apiKey) {
+            return NextResponse.json({ error: "Unauthorized: Missing API Key." }, { status: 401, headers: corsHeaders });
         }
 
-        // 2. THE KILL SWITCH CHECK
-        // Fetch the tenant to make sure they are active
-        const tenant = await prisma.tenant.findUnique({
-            where: { id: tenantId },
-            select: { isActive: true }
+        // 2. Validate the API Key and fetch the connected Tenant
+        const validKey = await prisma.apiKey.findUnique({
+            where: { key: apiKey },
+            include: { tenant: true } // Bring the tenant data along with the key
         });
 
+        // If the key doesn't exist in your database...
+        if (!validKey) {
+            return NextResponse.json({ error: "Unauthorized: Invalid API Key." }, { status: 401, headers: corsHeaders });
+        }
+
+        const tenant = validKey.tenant;
+
+        // 3. THE KILL SWITCH CHECK
         // If the agency doesn't exist OR you suspended them from your Super Admin dashboard...
         if (!tenant || !tenant.isActive) {
             return NextResponse.json({ 
@@ -37,19 +44,31 @@ export async function GET(request: Request) {
             }, { status: 403, headers: corsHeaders });
         }
 
-        // 3. FETCH THE TOURS
-        // If they are active, fetch all their tours to display on their website
+        // 4. FETCH THE TOURS
+        // Securely use the tenantId that we proved belongs to this exact API key
         const tours = await prisma.tour.findMany({
             where: { 
-                tenantId: tenantId,
+                tenantId: tenant.id,
                 // You might have a 'status' field in the future like 'PUBLISHED', you could add that here!
             },
             orderBy: { createdAt: 'desc' }
         });
 
-        // 4. Send the JSON data to the client's frontend website
+        // 5. Send the JSON data to the client's frontend website
         return NextResponse.json({ 
             success: true, 
+            agency: {
+                companyName: tenant.companyName,
+                logoUrl: tenant.logoUrl,
+                primaryColor: tenant.primaryColor,
+                accentColor: tenant.accentColor,
+                navbarColor: tenant.navbarColor,
+                buttonColor: tenant.buttonColor,
+                headingColor: tenant.headingColor,
+                footerColor: tenant.footerColor,
+                cardColor: tenant.cardColor,
+                navlink: tenant.navlink,
+            },
             count: tours.length, 
             tours 
         }, { status: 200, headers: corsHeaders });
@@ -59,4 +78,3 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500, headers: corsHeaders });
     }
 }
-

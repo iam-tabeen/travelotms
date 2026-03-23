@@ -1,6 +1,6 @@
 import { auth } from '@clerk/nextjs/server';
-import { redirect, notFound } from 'next/navigation'; // <-- Imported notFound
-import { headers } from 'next/headers'; // <-- Imported headers
+import { redirect, notFound } from 'next/navigation';
+import { headers } from 'next/headers';
 import prisma from '@/lib/prisma';
 import { ShieldAlert } from 'lucide-react';
 import AgencyRow from './AgencyRow'; 
@@ -9,11 +9,9 @@ export const dynamic = 'force-dynamic';
 
 export default async function SuperAdminDashboard() {
     // 1. DOMAIN RESTRICTION CHECK
-    // Get the domain the user is currently visiting
     const headersList = await headers();
     const domain = headersList.get('host') || '';
 
-    // If the domain is NOT localhost AND NOT your main SaaS domain, play dead.
     if (!domain.includes('localhost') && !domain.includes('travelotms.com')) {
         notFound(); 
     }
@@ -25,12 +23,14 @@ export default async function SuperAdminDashboard() {
         redirect('/'); 
     }
 
+    // 3. FETCH AGENCIES AND THEIR API KEYS
     const agencies = await prisma.tenant.findMany({
         orderBy: { createdAt: 'desc' },
         include: {
             _count: {
                 select: { tours: true, bookings: true }
-            }
+            },
+            apiKey: true // <-- THIS BRINGS THE KEY TO THE FRONTEND
         }
     });
 
@@ -61,6 +61,8 @@ export default async function SuperAdminDashboard() {
                                 <th className="p-5 text-xs font-black text-gray-400 uppercase tracking-widest">Agency Name</th>
                                 <th className="p-5 text-xs font-black text-gray-400 uppercase tracking-widest">Usage Stats</th>
                                 <th className="p-5 text-xs font-black text-gray-400 uppercase tracking-widest">Plan Tier</th>
+                                {/* ADDED API KEY COLUMN */}
+                                <th className="p-5 text-xs font-black text-gray-400 uppercase tracking-widest">API Key</th>
                                 <th className="p-5 text-xs font-black text-gray-400 uppercase tracking-widest text-right">System Access</th>
                             </tr>
                         </thead>
@@ -71,7 +73,7 @@ export default async function SuperAdminDashboard() {
                             
                             {agencies.length === 0 && (
                                 <tr>
-                                    <td colSpan={4} className="p-12 text-center text-gray-500 font-medium">
+                                    <td colSpan={5} className="p-12 text-center text-gray-500 font-medium">
                                         No agencies registered yet.
                                     </td>
                                 </tr>

@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider  = "postgresql"
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL") // 👈 ADD THIS LINE
 }
@@ -30,12 +30,23 @@ model Tenant {
   customTourLeads CustomTourLead[]
   promoCodes      PromoCode[]
   tours           Tour[]
-  backups     Backup[]
-  backupEmail     String?   // <-- ADD THIS LINE
+  backups         Backup[]
+  backupEmail     String?   
 
-  allowPartialPayments Boolean @default(false) // New setting for PRO users
+  allowPartialPayments Boolean @default(false) 
 
   teamMembers TeamMember[]
+  
+  // 👇 THIS IS THE FIX: The Tenant reaches back to the ApiKey
+  apiKey          ApiKey? 
+}
+
+model ApiKey {
+  id        String   @id @default(uuid())
+  key       String   @unique 
+  tenantId  String   @unique 
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
 }
 
 model TeamMember {
@@ -44,8 +55,8 @@ model TeamMember {
   tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   name      String
   email     String
-  role      String   @default("AGENT") // e.g., "ADMIN", "AGENT", "VIEWER"
-  status    String   @default("PENDING") // "ACTIVE" or "PENDING"
+  role      String   @default("AGENT") 
+  status    String   @default("PENDING") 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -108,22 +119,22 @@ model Booking {
   tenant         Tenant   @relation(fields: [tenantId], references: [id])
   tour           Tour     @relation(fields: [tourId], references: [id])
 
-  amountPaid      Float     @default(0) 
-  paymentStatus   String    @default("UNPAID") // UNPAID, PARTIAL, PAID
+  amountPaid     Float    @default(0) 
+  paymentStatus  String   @default("UNPAID") 
   
-  payments        Payment[] // A list of every transaction
+  payments       Payment[] 
 }
 
 model Payment {
-  id          String   @id @default(cuid())
-  bookingId   String
-  booking     Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  id         String   @id @default(cuid())
+  bookingId  String
+  booking    Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
   
-  amount      Float
-  date        DateTime @default(now())
-  method      String   // e.g., "Bank Transfer", "Cash", "Credit Card"
-  recordedBy  String   // Which agent logged the payment
-  notes       String?
+  amount     Float
+  date       DateTime @default(now())
+  method     String   
+  recordedBy String   
+  notes      String?
 }
 
 model CustomTourLead {
@@ -147,13 +158,13 @@ model CustomTourLead {
 }
 
 model Backup {
-  id          String   @id @default(cuid())
-  createdAt   DateTime @default(now())
-  fileName    String
-  fileUrl     String
-  backupType  String   
-  tenant      Tenant   @relation(fields: [tenantId], references: [id])
-  tenantId    String
+  id         String   @id @default(cuid())
+  createdAt  DateTime @default(now())
+  fileName   String
+  fileUrl    String
+  backupType String   
+  tenant     Tenant   @relation(fields: [tenantId], references: [id])
+  tenantId   String
 }
 
 model PromoCode {
