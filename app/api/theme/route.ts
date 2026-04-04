@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma'; // Adjust this import path to where your Prisma client lives
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   // 1. Get the agencyId from the URL
