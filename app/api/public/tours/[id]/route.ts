@@ -4,7 +4,8 @@ import prisma from '@/lib/prisma';
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-api-key',
+    // x-api-key hata diya hai kyunke ab public route hai
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization', 
 };
 
 export async function OPTIONS() {
@@ -14,26 +15,29 @@ export async function OPTIONS() {
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
         const { id } = await params;
-        const apiKey = request.headers.get('x-api-key');
+        
+        // 1. Get agencyId from URL URL query parameters
+        const { searchParams } = new URL(request.url);
+        const agencyId = searchParams.get('agencyId');
 
-        if (!apiKey) return NextResponse.json({ error: "Unauthorized: Missing API Key." }, { status: 401, headers: corsHeaders });
-
-        const validKey = await prisma.apiKey.findUnique({
-            where: { key: apiKey },
-            include: { tenant: true }
-        });
-
-        if (!validKey || !validKey.tenant.isActive) {
-            return NextResponse.json({ error: "Unauthorized or Suspended Account." }, { status: 403, headers: corsHeaders });
+        if (!agencyId) {
+            return NextResponse.json({ error: "Missing Agency ID." }, { status: 400, headers: corsHeaders });
         }
 
-        const tenant = validKey.tenant;
+        // 2. Validate the Agency directly
+        const tenant = await prisma.tenant.findUnique({
+            where: { id: agencyId }
+        });
 
-        // Fetch the specific tour WITH its itinerary days
+        if (!tenant || !tenant.isActive) {
+            return NextResponse.json({ error: "Agency not found or Suspended Account." }, { status: 403, headers: corsHeaders });
+        }
+
+        // 3. Fetch the specific tour WITH its itinerary days
         const tour = await prisma.tour.findUnique({
             where: { 
                 id: id,
-                tenantId: tenant.id, // Security: Ensure this agency actually owns this specific tour ID!
+                tenantId: tenant.id, // Security: Ensure this agency actually owns this specific tour ID
                 status: 'ACTIVE'
             },
             include: {
