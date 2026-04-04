@@ -13,8 +13,13 @@ export default function AgencyRow({ agency }: { agency: any }) {
     const [copied, setCopied] = useState(false);
 
     const handleToggleAccess = () => {
-        startTransition(() => {
-            toggleAgencyAccess(agency.id, agency.isActive);
+        // No more PIN prompt needed! The whole page is secure.
+        startTransition(async () => {
+            const result = await toggleAgencyAccess(agency.id, agency.isActive);
+            
+            if (!result.success) {
+                alert(result.error);
+            }
         });
     };
 
@@ -75,11 +80,10 @@ export default function AgencyRow({ agency }: { agency: any }) {
                 >
                     <option value="BASIC">BASIC</option>
                     <option value="PRO">PRO</option>
-                    {/* <option value="ENTERPRISE">ENTERPRISE</option> */}
                 </select>
             </td>
 
-            {/* NEW: API KEY COLUMN */}
+            {/* API KEY COLUMN */}
             <td className="p-5">
                 {agency.apiKey ? (
                     <div className="flex items-center gap-2 bg-gray-900 rounded-lg p-2 border border-gray-700 w-fit">

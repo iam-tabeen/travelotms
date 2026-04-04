@@ -1,80 +1,70 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
-
-// This allows external domains (like fasttravels.pk) to request data without being blocked by browser security
-const corsHeaders = {
-    'Access-Control-Allow-Origin': '*', // In production, you can restrict this to the specific client's domain
-    'Access-Control-Allow-Methods': 'GET, OPTIONS',
-    // IMPORTANT: Added 'x-api-key' to allowed headers so browsers don't block the request
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-api-key',
-};
-
-// Handle OPTIONS request for CORS preflight
-export async function OPTIONS() {
-    return NextResponse.json({}, { headers: corsHeaders });
-}
+import prisma from '@/lib/prisma'; // Using our Turbopack-safe import!
 
 export async function GET(request: Request) {
     try {
-        // 1. Get the API Key securely from the Headers (NOT the URL)
+        // 1. Check for the API Key sent by the frontend
         const apiKey = request.headers.get('x-api-key');
-
+        
         if (!apiKey) {
-            return NextResponse.json({ error: "Unauthorized: Missing API Key." }, { status: 401, headers: corsHeaders });
+            return NextResponse.json({ success: false, error: "Unauthorized: Missing API Key" }, { status: 401 });
         }
 
-        // 2. Validate the API Key and fetch the connected Tenant
-        const validKey = await prisma.apiKey.findUnique({
+        // 2. Find which agency owns this API Key
+        const keyRecord = await prisma.apiKey.findUnique({
             where: { key: apiKey },
-            include: { tenant: true } // Bring the tenant data along with the key
+            include: { tenant: true }
         });
 
-        // If the key doesn't exist in your database...
-        if (!validKey) {
-            return NextResponse.json({ error: "Unauthorized: Invalid API Key." }, { status: 401, headers: corsHeaders });
+        // 3. Security check: Does the key exist? Is the agency active?
+        if (!keyRecord || !keyRecord.tenant || !keyRecord.tenant.isActive) {
+            return NextResponse.json({ success: false, error: "Unauthorized or Agency Suspended" }, { status: 401 });
         }
 
-        const tenant = validKey.tenant;
+        const tenantId = keyRecord.tenantId;
 
-        // 3. THE KILL SWITCH CHECK
-        // If the agency doesn't exist OR you suspended them from your Super Admin dashboard...
-        if (!tenant || !tenant.isActive) {
-            return NextResponse.json({ 
-                error: "This agency's account is currently suspended or inactive." 
-            }, { status: 403, headers: corsHeaders });
-        }
+        // 4. Extract search and sort filters from the URL
+        const { searchParams } = new URL(request.url);
+        const search = searchParams.get('search') || '';
+        const sort = searchParams.get('sort') || 'newest';
 
-        // 4. FETCH THE TOURS
-        // Securely use the tenantId that we proved belongs to this exact API key
-        const tours = await prisma.tour.findMany({
-            where: { 
-                tenantId: tenant.id,
-                // You might have a 'status' field in the future like 'PUBLISHED', you could add that here!
-            },
-            orderBy: { createdAt: 'desc' }
+        let orderBy: any = { createdAt: 'desc' };
+        if (sort === 'price_asc') orderBy = { basePrice: 'asc' };
+        if (sort === 'price_desc') orderBy = { basePrice: 'desc' };
+
+        // 5. Fetch the agency and its ACTIVE tours
+        const agency = await prisma.tenant.findUnique({
+            where: { id: tenantId },
+            include: {
+                tours: {
+                    where: { 
+                        status: 'ACTIVE',
+                        ...(search ? {
+                            OR: [
+                                { title: { contains: search, mode: 'insensitive' } },
+                                { destination: { contains: search, mode: 'insensitive' } }
+                            ]
+                        } : {})
+                    },
+                    orderBy: orderBy
+                }
+            }
         });
 
-        // 5. Send the JSON data to the client's frontend website
-        return NextResponse.json({ 
-            success: true, 
-            agency: {
-                companyName: tenant.companyName,
-                logoUrl: tenant.logoUrl,
-                primaryColor: tenant.primaryColor,
-                accentColor: tenant.accentColor,
-                navbarColor: tenant.navbarColor,
-                buttonColor: tenant.buttonColor,
-                headingColor: tenant.headingColor,
-                footerColor: tenant.footerColor,
-                cardColor: tenant.cardColor,
-                navlink: tenant.navlink,
-            },
-            count: tours.length, 
-            tours 
-        }, { status: 200, headers: corsHeaders });
+        // 6. Handle the custom duration sorting
+        if (agency && agency.tours) {
+            if (sort === 'duration_asc') {
+                agency.tours.sort((a: any, b: any) => parseInt(a.duration) - parseInt(b.duration));
+            } else if (sort === 'duration_desc') {
+                agency.tours.sort((a: any, b: any) => parseInt(b.duration) - parseInt(a.duration));
+            }
+        }
+
+        // 7. Send the data back to the frontend!
+        return NextResponse.json({ success: true, agency });
 
     } catch (error) {
         console.error("Public API Error:", error);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500, headers: corsHeaders });
+        return NextResponse.json({ success: false, error: "Internal Server Error" }, { status: 500 });
     }
 }

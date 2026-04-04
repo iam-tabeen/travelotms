@@ -181,9 +181,12 @@ export default async function AdminDashboard() {
                 {/* METRICS SECTION */}
                 <section>
                     <h2 className="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-2 mt-2 dash-text-secondary">Top Level Metrics</h2>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 md:gap-6">
+                    
+                    {/* 1. Changed to a 6-column grid on large screens */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 md:gap-6">
                         
-                        <div className="stat-card border-b-[6px] border-b-green-500 relative overflow-hidden stat-card-green">
+                        {/* 2. Top Row Cards: Span 3 columns each (50% width) */}
+                        <div className="stat-card border-b-[3px] border-b-green-500 relative overflow-hidden stat-card-green sm:col-span-1 lg:col-span-3">
                             <div className="absolute top-4 right-4 text-green-500 opacity-20 dash-icon-bg dash-icon-green dash-text-green">
                                 <DollarSign size={48} strokeWidth={3} />
                             </div>
@@ -196,7 +199,7 @@ export default async function AdminDashboard() {
                             </div>
                         </div>
                         
-                        <div className="stat-card border-b-[6px] border-b-amber-500 relative overflow-hidden stat-card-amber">
+                        <div className="stat-card border-b-[3px] border-b-amber-500 relative overflow-hidden stat-card-amber sm:col-span-1 lg:col-span-3">
                             <div className="absolute top-4 right-4 text-orange-500 opacity-20 dash-icon-bg dash-icon-amber dash-text-orange">
                                 <CreditCard size={48} strokeWidth={3} />
                             </div>
@@ -209,7 +212,8 @@ export default async function AdminDashboard() {
                             </div>
                         </div>
 
-                        <div className="stat-card border-b-[6px] border-b-blue-500 relative overflow-hidden stat-card-blue">
+                        {/* 3. Bottom Row Cards: Span 2 columns each (33% width) */}
+                        <div className="stat-card border-b-[3px] border-b-blue-500 relative overflow-hidden stat-card-blue sm:col-span-1 lg:col-span-2">
                             <div className="absolute top-4 right-4 text-blue-500 opacity-20 dash-icon-bg dash-icon-blue dash-text-blue">
                                 <Users size={48} strokeWidth={3} />
                             </div>
@@ -220,7 +224,7 @@ export default async function AdminDashboard() {
                             </div>
                         </div>
 
-                        <div className="stat-card border-b-[6px] border-b-orange-500 relative overflow-hidden stat-card-orange">
+                        <div className="stat-card border-b-[3px] border-b-orange-500 relative overflow-hidden stat-card-orange sm:col-span-1 lg:col-span-2">
                             <div className="absolute top-4 right-4 text-orange-500 opacity-20 dash-icon-bg dash-icon-orange dash-text-orange">
                                 <Clock size={48} strokeWidth={3} />
                             </div>
@@ -231,20 +235,19 @@ export default async function AdminDashboard() {
                             </div>
                         </div>
 
-                        {/* Used Inline Styles here to bypass Tailwind compiler issues for arbitrary hex colors */}
                         {/* Conversion Rate Card */}
-<div className="stat-card border-b-[6px] relative overflow-hidden stat-card-emerald force-emerald-border sm:col-span-2 lg:col-span-1 xl:col-span-1">
-    <div className="absolute top-4 right-4 opacity-20 force-emerald">
-        <TrendingUp size={48} strokeWidth={3} />
-    </div>
-    <div className="stat-card-title z-10 relative">Conversion Rate</div>
-    <div className="stat-card-value force-emerald text-3xl md:text-[36px] z-10 relative flex items-baseline gap-1" style={{fontFamily: 'var(--font-poppins)', fontWeight:"800"}}>
-        {conversionRate}%
-    </div>
-    <div className="text-[10px] text-gray-400 font-bold flex gap-1 mt-1 z-10 relative dash-text-secondary">
-        Leads <ArrowRight size={10} className="inline" /> Converted
-    </div>
-</div>
+                        <div className="stat-card border-b-[3px] relative overflow-hidden stat-card-emerald force-emerald-border sm:col-span-2 lg:col-span-2">
+                            <div className="absolute top-4 right-4 opacity-20 force-emerald">
+                                <TrendingUp size={48} strokeWidth={3} />
+                            </div>
+                            <div className="stat-card-title z-10 relative">Conversion Rate</div>
+                            <div className="stat-card-value force-emerald text-3xl md:text-[36px] z-10 relative flex items-baseline gap-1" style={{fontFamily: 'var(--font-poppins)', fontWeight:"800"}}>
+                                {conversionRate}%
+                            </div>
+                            <div className="text-[10px] text-gray-400 font-bold flex gap-1 mt-1 z-10 relative dash-text-secondary">
+                                Leads <ArrowRight size={10} className="inline" /> Converted
+                            </div>
+                        </div>
 
                     </div>
                 </section>

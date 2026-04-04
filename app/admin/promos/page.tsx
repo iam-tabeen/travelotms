@@ -62,7 +62,7 @@ export default async function PromosDashboard() {
                 {/* Header */}
                 <div className="bg-white rounded-[24px] shadow-sm border border-gray-100 p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 transition-colors promo-bg-card promo-border-main">
                     <div>
-                        <h1 className="text-3xl font-black text-axius-secondary uppercase tracking-tighter flex items-center gap-3 promo-text-primary">
+                        <h1 className="text-3xl font-black text-axius-secondary tracking-tighter flex items-center gap-3 promo-text-primary">
                             <TicketPercent className="text-blue-500" size={32} />
                             Marketing & Discounts
                         </h1>

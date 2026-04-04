@@ -59,7 +59,7 @@ export default async function SafetyVaultPage() {
                 {/* Header */}
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 md:gap-0 transition-colors vault-bg-card vault-border-main">
                     <div>
-                        <h1 className="text-3xl font-black text-axius-secondary uppercase tracking-tighter flex items-center gap-3 vault-text-primary">
+                        <h1 className="text-3xl font-black text-axius-secondary  tracking-tighter flex items-center gap-3 vault-text-primary">
                             <ShieldCheck className="text-green-500 vault-badge-green" size={32} />
                             Database Backups
                         </h1>

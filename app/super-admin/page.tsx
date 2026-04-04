@@ -1,9 +1,10 @@
+import prisma from '@/lib/prisma';
 import { auth } from '@clerk/nextjs/server';
 import { redirect, notFound } from 'next/navigation';
-import { headers } from 'next/headers';
-import prisma from '@/lib/prisma';
+import { headers, cookies } from 'next/headers'; // <-- Added cookies import
 import { ShieldAlert } from 'lucide-react';
 import AgencyRow from './AgencyRow'; 
+import SuperAdminLogin from './SuperAdminLogin'; 
 
 export const dynamic = 'force-dynamic';
 
@@ -16,21 +17,30 @@ export default async function SuperAdminDashboard() {
         notFound(); 
     }
 
-    // 2. THE MASTER LOCK
+    // 2. THE MASTER LOCK (Clerk Authentication)
     const { userId } = await auth();
 
     if (!userId || userId !== process.env.SUPER_ADMIN_ID) {
-        redirect('/'); 
+        redirect('/admin'); // Kick them back to standard admin
     }
 
-    // 3. FETCH AGENCIES AND THEIR API KEYS
+    // 3. THE USERNAME & PASSWORD GATE (Cookie Check)
+    const cookieStore = await cookies();
+    const isUnlocked = cookieStore.get('super_admin_unlocked')?.value === 'true';
+
+    // If they don't have the secure session cookie, show the login UI instead!
+    if (!isUnlocked) {
+        return <SuperAdminLogin />;
+    }
+
+    // 4. FETCH AGENCIES (Only runs if ALL security checks above pass!)
     const agencies = await prisma.tenant.findMany({
         orderBy: { createdAt: 'desc' },
         include: {
             _count: {
                 select: { tours: true, bookings: true }
             },
-            apiKey: true // <-- THIS BRINGS THE KEY TO THE FRONTEND
+            apiKey: true
         }
     });
 

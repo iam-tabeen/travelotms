@@ -1,3 +1,4 @@
+// Use this (NO curly braces):
 import prisma from '@/lib/prisma';
 import { auth, currentUser } from '@clerk/nextjs/server';
 

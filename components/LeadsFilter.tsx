@@ -35,12 +35,32 @@ export default function LeadsFilter({ activeTab }: { activeTab: string }) {
 
     const showSearchButton = search !== currentSearch;
 
-    // Streamlined filters
+    // 🎨 Added specific Light & Dark mode colors to each filter!
     const quickFilters = [
-        { label: "All Leads", value: "ALL", icon: <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512" width={"16px"}><path fill="currentColor" d="M320 192a64 64 0 1 0 0-128 64 64 0 1 0 0 128zm0-176a112 112 0 1 1 0 224 112 112 0 1 1 0-224zM296 336c-57.4 0-104 46.6-104 104l0 16c0 13.3-10.7 24-24 24s-24-10.7-24-24l0-16c0-83.9 68.1-152 152-152l48 0c83.9 0 152 68.1 152 152l0 16c0 13.3-10.7 24-24 24s-24-10.7-24-24l0-16c0-57.4-46.6-104-104-104l-48 0zm135.4-93.2c11.7-11.3 21.6-24.4 29.4-38.8 5.9 2.6 12.4 4 19.2 4 26.5 0 48-21.5 48-48s-21.5-48-48-48l-.8 0c-1.6-16.6-5.8-32.4-12.1-47.1 4.2-.6 8.6-.9 12.9-.9 53 0 96 43 96 96s-43 96-96 96c-17.7 0-34.3-4.8-48.6-13.2zM160 64c4.4 0 8.7 .3 12.9 .9-6.3 14.7-10.5 30.6-12.1 47.1l-.8 0c-26.5 0-48 21.5-48 48s21.5 48 48 48c6.8 0 13.3-1.4 19.2-4 7.8 14.4 17.7 27.5 29.4 38.8-14.2 8.4-30.8 13.2-48.6 13.2-53 0-96-43-96-96s43-96 96-96zM149.3 304c-15.1 16.3-27.5 35-36.5 55.6-38 15.5-64.8 52.8-64.8 96.4 0 13.3-10.7 24-24 24S0 469.3 0 456c0-83.1 66.6-150.6 149.3-152zm377.9 55.6c-9-20.6-21.5-39.4-36.5-55.6 82.7 1.4 149.3 68.9 149.3 152 0 13.3-10.7 24-24 24s-24-10.7-24-24c0-43.6-26.8-80.9-64.8-96.4z"/></svg> },
-        { label: "Action Needed", value: "PENDING", icon: <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width={"16px"}><path fill="currentColor" d="M464 256a208 208 0 1 1 -416 0 208 208 0 1 1 416 0zM0 256a256 256 0 1 0 512 0 256 256 0 1 0 -512 0zM232 120l0 136c0 8 4 15.5 10.7 20l96 64c11 7.4 25.9 4.4 33.3-6.7s4.4-25.9-6.7-33.3L280 243.2 280 120c0-13.3-10.7-24-24-24s-24 10.7-24 24z"/></svg>  },
-        { label: "Confirmed", value: "CONFIRMED", icon: <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width={"16px"}><path fill="currentColor" d="M256 512a256 256 0 1 1 0-512 256 256 0 1 1 0 512zm0-464a208 208 0 1 0 0 416 208 208 0 1 0 0-416zm70.7 121.9c7.8-10.7 22.8-13.1 33.5-5.3 10.7 7.8 13.1 22.8 5.3 33.5L243.4 366.1c-4.1 5.7-10.5 9.3-17.5 9.8-7 .5-13.9-2-18.8-6.9l-55.9-55.9c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0l36 36 105.6-145.2z"/></svg> },
-        { label: "Cancelled", value: "CANCELLED", icon: <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width={"16px"}><path fill="currentColor" d="M256 48a208 208 0 1 1 0 416 208 208 0 1 1 0-416zm0 464a256 256 0 1 0 0-512 256 256 0 1 0 0 512zM202.6 152.8c-8.4-10.3-23.5-11.8-33.8-3.4s-11.8 23.5-3.4 33.8L225 256 165.4 328.8c-8.4 10.3-6.9 25.4 3.4 33.8s25.4 6.9 33.8-3.4l53.4-65.3 53.4 65.3c8.4 10.3 23.5 11.8 33.8 3.4s11.8-23.5 3.4-33.8L287 256 346.6 183.2c8.4-10.3 6.9-25.4-3.4-33.8s-25.4-6.9-33.8 3.4l-53.4 65.3-53.4-65.3z"/></svg> },
+        { 
+            label: "All Leads", 
+            value: "ALL", 
+            activeClass: "bg-blue-50 border-blue-300 text-blue-700 dark:bg-blue-500/15 dark:border-blue-500/40 dark:text-blue-400",
+            icon: <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512" width={"16px"}><path fill="currentColor" d="M320 192a64 64 0 1 0 0-128 64 64 0 1 0 0 128zm0-176a112 112 0 1 1 0 224 112 112 0 1 1 0-224zM296 336c-57.4 0-104 46.6-104 104l0 16c0 13.3-10.7 24-24 24s-24-10.7-24-24l0-16c0-83.9 68.1-152 152-152l48 0c83.9 0 152 68.1 152 152l0 16c0 13.3-10.7 24-24 24s-24-10.7-24-24l0-16c0-57.4-46.6-104-104-104l-48 0zm135.4-93.2c11.7-11.3 21.6-24.4 29.4-38.8 5.9 2.6 12.4 4 19.2 4 26.5 0 48-21.5 48-48s-21.5-48-48-48l-.8 0c-1.6-16.6-5.8-32.4-12.1-47.1 4.2-.6 8.6-.9 12.9-.9 53 0 96 43 96 96s-43 96-96 96c-17.7 0-34.3-4.8-48.6-13.2zM160 64c4.4 0 8.7 .3 12.9 .9-6.3 14.7-10.5 30.6-12.1 47.1l-.8 0c-26.5 0-48 21.5-48 48s21.5 48 48 48c6.8 0 13.3-1.4 19.2-4 7.8 14.4 17.7 27.5 29.4 38.8-14.2 8.4-30.8 13.2-48.6 13.2-53 0-96-43-96-96s43-96 96-96zM149.3 304c-15.1 16.3-27.5 35-36.5 55.6-38 15.5-64.8 52.8-64.8 96.4 0 13.3-10.7 24-24 24S0 469.3 0 456c0-83.1 66.6-150.6 149.3-152zm377.9 55.6c-9-20.6-21.5-39.4-36.5-55.6 82.7 1.4 149.3 68.9 149.3 152 0 13.3-10.7 24-24 24s-24-10.7-24-24c0-43.6-26.8-80.9-64.8-96.4z"/></svg> 
+        },
+        { 
+            label: "Action Needed", 
+            value: "PENDING", 
+            activeClass: "bg-orange-50 border-orange-300 text-orange-700 dark:bg-orange-500/15 dark:border-orange-500/40 dark:text-orange-400",
+            icon: <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width={"16px"}><path fill="currentColor" d="M464 256a208 208 0 1 1 -416 0 208 208 0 1 1 416 0zM0 256a256 256 0 1 0 512 0 256 256 0 1 0 -512 0zM232 120l0 136c0 8 4 15.5 10.7 20l96 64c11 7.4 25.9 4.4 33.3-6.7s4.4-25.9-6.7-33.3L280 243.2 280 120c0-13.3-10.7-24-24-24s-24 10.7-24 24z"/></svg>  
+        },
+        { 
+            label: "Confirmed", 
+            value: "CONFIRMED", 
+            activeClass: "bg-emerald-50 border-emerald-300 text-emerald-700 dark:bg-emerald-500/15 dark:border-emerald-500/40 dark:text-emerald-400",
+            icon: <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width={"16px"}><path fill="currentColor" d="M256 512a256 256 0 1 1 0-512 256 256 0 1 1 0 512zm0-464a208 208 0 1 0 0 416 208 208 0 1 0 0-416zm70.7 121.9c7.8-10.7 22.8-13.1 33.5-5.3 10.7 7.8 13.1 22.8 5.3 33.5L243.4 366.1c-4.1 5.7-10.5 9.3-17.5 9.8-7 .5-13.9-2-18.8-6.9l-55.9-55.9c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0l36 36 105.6-145.2z"/></svg> 
+        },
+        { 
+            label: "Cancelled", 
+            value: "CANCELLED", 
+            activeClass: "bg-red-50 border-red-300 text-red-700 dark:bg-red-500/15 dark:border-red-500/40 dark:text-red-400",
+            icon: <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width={"16px"}><path fill="currentColor" d="M256 48a208 208 0 1 1 0 416 208 208 0 1 1 0-416zm0 464a256 256 0 1 0 0-512 256 256 0 1 0 0 512zM202.6 152.8c-8.4-10.3-23.5-11.8-33.8-3.4s-11.8 23.5-3.4 33.8L225 256 165.4 328.8c-8.4 10.3-6.9 25.4 3.4 33.8s25.4 6.9 33.8-3.4l53.4-65.3 53.4 65.3c8.4 10.3 23.5 11.8 33.8 3.4s11.8-23.5 3.4-33.8L287 256 346.6 183.2c8.4-10.3 6.9-25.4-3.4-33.8s-25.4-6.9-33.8 3.4l-53.4 65.3-53.4-65.3z"/></svg> 
+        },
     ];
 
     return (
@@ -56,11 +76,9 @@ export default function LeadsFilter({ activeTab }: { activeTab: string }) {
                 html.dark .filter-icon-blue { color: #60A5FA !important; }
                 html.dark .filter-loader { color: #60A5FA !important; }
 
-                /* Quick Filter Pills - Sleeker Version */
+                /* Only target inactive pills here. The active pills use inline Tailwind classes now */
                 html.dark .pill-inactive { background-color: #0F172A !important; border-color: #334155 !important; color: #94A3B8 !important; }
                 html.dark .pill-inactive:hover { background-color: #1E293B !important; color: #E2E8F0 !important; }
-                
-                html.dark .pill-active { background-color: rgba(59, 130, 246, 0.15) !important; border-color: rgba(59, 130, 246, 0.4) !important; color: #60A5FA !important; }
             `}</style>
 
             {/* QUICK FILTERS ROW - Optimized Size */}
@@ -74,7 +92,7 @@ export default function LeadsFilter({ activeTab }: { activeTab: string }) {
                             disabled={isPending}
                             className={`flex items-center gap-1.5 px-3 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer border ${
                                 isActive 
-                                ? 'bg-blue-50 border-blue-300 text-blue-700 pill-active' 
+                                ? filter.activeClass // <-- Injects exact color matching the status
                                 : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-700 pill-inactive'
                             } ${isPending ? 'opacity-50 cursor-wait' : ''}`}
                         >

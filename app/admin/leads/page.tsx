@@ -4,10 +4,12 @@ import CustomLeadRow from '@/components/CustomLeadRow';
 import LeadsTabs from '@/components/LeadsTabs'; 
 import ExportCsvButton from '@/components/ExportCsvButton'; 
 import LeadsFilter from '@/components/LeadsFilter'; 
+import Pagination from '@/components/Pagination'; 
 import { redirect } from 'next/navigation';
 import { getUserAccess } from '@/lib/getTenant'; 
 
 export const dynamic = 'force-dynamic';
+const ITEMS_PER_PAGE = 10; 
 
 export default async function LeadsDashboard({
   searchParams, 
@@ -25,6 +27,7 @@ export default async function LeadsDashboard({
     const searchQuery = params?.search || '';
     const sortQuery = params?.sort || 'newest';
     const statusQuery = params?.status || 'ALL'; 
+    const currentPage = Number(params?.page) || 1;
 
     const companyDisplayName = tenant.companyName || "AXIUS DIGITAL";
     const isPro = tenant.planTier === 'PRO';
@@ -58,32 +61,38 @@ export default async function LeadsDashboard({
     if (sortQuery === 'price-desc') orderBy = { totalPrice: 'desc' };
     if (sortQuery === 'price-asc') orderBy = { totalPrice: 'asc' };
 
-    // EXPLICIT WHERE CLAUSES FOR PRISMA
     let regularWhereClause: any = { tenantId: tenant.id, ...regularSearchFilter };
-    if (statusQuery !== 'ALL') {
-        regularWhereClause.status = statusQuery; // Forces Prisma to filter!
-    }
+    if (statusQuery !== 'ALL') regularWhereClause.status = statusQuery;
 
     let customWhereClause: any = { tenantId: tenant.id, ...customSearchFilter };
-    if (statusQuery !== 'ALL') {
-        customWhereClause.status = statusQuery; // Forces Prisma to filter!
-    }
+    if (statusQuery !== 'ALL') customWhereClause.status = statusQuery;
 
-    // --- QUERIES ---
+    // --- MATH & QUERIES ---
+    const skip = (currentPage - 1) * ITEMS_PER_PAGE;
+    let totalPages = 1;
+
     if (activeTab === 'regular') {
+        const filteredCount = await prisma.booking.count({ where: regularWhereClause });
+        totalPages = Math.ceil(filteredCount / ITEMS_PER_PAGE);
+
         regularBookings = await prisma.booking.findMany({
             where: regularWhereClause,
             orderBy: orderBy,
+            take: ITEMS_PER_PAGE,
+            skip: skip,
             include: { 
-                tour: { 
-                    include: { itineraryDays: true } 
-                },
+                tour: { include: { itineraryDays: true } },
                 payments: { orderBy: { date: 'desc' } }
             }
         });
     } else {
+        const filteredCount = await prisma.customTourLead.count({ where: customWhereClause });
+        totalPages = Math.ceil(filteredCount / ITEMS_PER_PAGE);
+
         customLeads = await prisma.customTourLead.findMany({
             where: customWhereClause,
+            take: ITEMS_PER_PAGE,
+            skip: skip,
             orderBy: (sortQuery === 'price-desc' || sortQuery === 'price-asc') ? { createdAt: 'desc' } : orderBy
         });
     }
@@ -95,54 +104,15 @@ export default async function LeadsDashboard({
             <div className="max-w-7xl mx-auto space-y-6 md:space-y-8">
                 
                 <style>{`
-                  /* 🛡️ GUARANTEED DARK MODE OVERRIDES 🛡️ */
                   html.dark .lead-bg-main { background-color: #0F172A !important; }
                   html.dark .lead-bg-card { background-color: #1E293B !important; border-color: #334155 !important; }
                   html.dark .lead-bg-muted { background-color: rgba(30, 41, 59, 0.5) !important; border-color: #334155 !important; }
                   html.dark .lead-bg-blue { background-color: rgba(59, 130, 246, 0.1) !important; border-color: rgba(59, 130, 246, 0.2) !important; }
-                  
                   html.dark .lead-text-primary { color: #FFFFFF !important; }
                   html.dark .lead-text-secondary { color: #94A3B8 !important; }
                   html.dark .lead-text-blue { color: #60A5FA !important; }
-                  
                   html.dark .lead-border-main { border-color: #334155 !important; }
                   html.dark .lead-divide > :not([hidden]) ~ :not([hidden]) { border-top-color: #334155 !important; }
-
-                  /* Mobile Styles */
-                  @media (max-width: 1024px) {
-                    .table-container { background: transparent !important; border: none !important; box-shadow: none !important; padding: 0 !important; }
-                    .responsive-table, .responsive-table thead, .responsive-table tbody, .responsive-table th, .responsive-table td, .responsive-table tr { display: block; width: 100%; }
-                    .responsive-table thead { display: none; }
-                    
-                    .responsive-table tbody tr { 
-                        background: #fff; 
-                        border-radius: 20px; 
-                        border: 1px solid #E5E9F2; 
-                        margin-bottom: 20px; 
-                        padding: 20px; 
-                        box-shadow: 0 4px 12px rgba(0,0,0,0.03); 
-                    }
-                    html.dark .responsive-table tbody tr { background: #1E293B !important; border-color: #334155 !important; }
-                    .responsive-table tbody td { display: flex; flex-direction: column; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid #F0F2F7; text-align: left; }
-                    html.dark .responsive-table tbody td { border-bottom-color: #334155 !important; }
-                    .responsive-table tbody td:last-child { border-bottom: none; padding-bottom: 0; padding-top: 16px; }
-                    
-                    .responsive-table tbody td::before { font-size: 10px; font-weight: 800; color: #8A93A7; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
-                    html.dark .responsive-table tbody td::before { color: #94A3B8 !important; }
-
-                    .tab-regular tbody td:nth-child(1)::before { content: 'Received'; }
-                    .tab-regular tbody td:nth-child(2)::before { content: 'Client Details'; }
-                    .tab-regular tbody td:nth-child(3)::before { content: 'Expedition'; }
-                    .tab-regular tbody td:nth-child(4)::before { content: 'Pax & Date'; }
-                    .tab-regular tbody td:nth-child(5)::before { content: 'Value'; }
-                    .tab-regular tbody td:nth-child(6)::before { content: 'Status & Actions'; display: block; width: 100%; }
-                    .tab-custom tbody td:nth-child(1)::before { content: 'Received'; }
-                    .tab-custom tbody td:nth-child(2)::before { content: 'Client Details'; }
-                    .tab-custom tbody td:nth-child(3)::before { content: 'Quick Summary'; }
-                    .tab-custom tbody td:nth-child(4)::before { content: 'Budget'; }
-                    .tab-custom tbody td:nth-child(5)::before { content: 'Status'; }
-                    .tab-custom tbody td:nth-child(6)::before { content: 'Actions'; display: block; width: 100%; }
-                  }
                 `}</style>
 
                 {/* HEADER SECTION */}
@@ -156,17 +126,13 @@ export default async function LeadsDashboard({
                         </div>
                         
                         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full md:w-auto mt-2 md:mt-0">
-                            <div className="w-full sm:w-auto">
-                                {canManage && <ExportCsvButton leads={exportData} isPro={isPro} activeTab={activeTab} />}
-                            </div>
-                            
-                            <div className="bg-blue-50/50 px-8 py-2 rounded-xl border border-blue-100 text-center w-full sm:w-auto flex flex-col items-center justify-center shrink-0 transition-colors lead-bg-blue">
+                            {canManage && <ExportCsvButton leads={exportData} isPro={isPro} activeTab={activeTab} />}
+                            <div className="bg-blue-50/50 px-8 py-2 rounded-xl border border-blue-100 text-center w-full sm:w-auto flex flex-col items-center justify-center transition-colors lead-bg-blue">
                                 <span className="block text-3xl md:text-4xl text-[#2563EB] leading-none mb-1.5 lead-text-blue" style={{fontFamily: 'var(--font-poppins)', fontWeight:"700"}}>{totalLeads}</span>
                                 <span className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest lead-text-secondary">Total Leads</span>
                             </div>
                         </div>
                     </div>
-
                     <div className="px-6 md:px-8 py-4 bg-gray-50/50 border-t border-gray-100 transition-colors lead-bg-muted lead-border-main">
                         <LeadsFilter activeTab={activeTab} />
                     </div>
@@ -179,25 +145,21 @@ export default async function LeadsDashboard({
                     <table className={`w-full text-left border-collapse responsive-table ${activeTab === 'regular' ? 'tab-regular' : 'tab-custom'}`}>
                         <thead>
                             <tr className="bg-gray-50/80 border-b border-gray-100 transition-colors lead-bg-muted lead-border-main">
-                                <th className="p-5 md:p-6 text-[11px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap lead-text-secondary">Received</th>
-                                <th className="p-5 md:p-6 text-[11px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap lead-text-secondary">Client Details</th>
-                                <th className="p-5 md:p-6 text-[11px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap lead-text-secondary">{activeTab === 'regular' ? 'Expedition' : 'Quick Summary'}</th>
-                                <th className="p-5 md:p-6 text-[11px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap lead-text-secondary">{activeTab === 'regular' ? 'Pax & Date' : 'Budget'}</th>
-                                <th className="p-5 md:p-6 text-[11px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap lead-text-secondary">{activeTab === 'regular' ? 'Value' : 'Status'}</th>
-                                <th className="p-5 md:p-6 text-[11px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap text-right lead-text-secondary">{activeTab === 'regular' ? 'Status & Actions' : 'Actions'}</th>
+                                <th className="p-5 md:p-6 text-[11px] font-black text-gray-400 uppercase tracking-widest lead-text-secondary">Received</th>
+                                <th className="p-5 md:p-6 text-[11px] font-black text-gray-400 uppercase tracking-widest lead-text-secondary">Client Details</th>
+                                <th className="p-5 md:p-6 text-[11px] font-black text-gray-400 uppercase tracking-widest lead-text-secondary">{activeTab === 'regular' ? 'Expedition' : 'Quick Summary'}</th>
+                                <th className="p-5 md:p-6 text-[11px] font-black text-gray-400 uppercase tracking-widest lead-text-secondary">{activeTab === 'regular' ? 'Pax & Date' : 'Budget'}</th>
+                                <th className="p-5 md:p-6 text-[11px] font-black text-gray-400 uppercase tracking-widest lead-text-secondary">{activeTab === 'regular' ? 'Value' : 'Status'}</th>
+                                <th className="p-5 md:p-6 text-[11px] font-black text-gray-400 uppercase tracking-widest text-right lead-text-secondary">{activeTab === 'regular' ? 'Status & Actions' : 'Actions'}</th>
                             </tr>
                         </thead>
                         
                         <tbody className="divide-y divide-gray-100 lead-divide">
-                            {activeTab === 'regular' && (
+                            {activeTab === 'regular' ? (
                                 regularBookings.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={6} className="p-12 text-center text-gray-400 font-bold italic lead-text-secondary">
-                                            {searchQuery ? `No leads found matching "${searchQuery}"` : statusQuery !== 'ALL' ? `No ${statusQuery} leads found.` : "No regular bookings received yet."}
-                                        </td>
-                                    </tr>
+                                    <tr><td colSpan={6} className="p-12 text-center text-gray-400 font-bold italic">No regular bookings.</td></tr>
                                 ) : (
-                                    regularBookings.map((booking: any) => (
+                                    regularBookings.map((booking) => (
                                         <RegularLeadRow 
                                             key={booking.id} 
                                             booking={booking} 
@@ -208,27 +170,24 @@ export default async function LeadsDashboard({
                                         />
                                     ))
                                 )
-                            )}
-
-                            {activeTab === 'custom' && (
+                            ) : (
                                 customLeads.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={6} className="p-12 text-center text-gray-400 font-bold italic lead-text-secondary">
-                                            {searchQuery ? `No requests found matching "${searchQuery}"` : statusQuery !== 'ALL' ? `No ${statusQuery} custom requests found.` : "No custom requests received yet."}
-                                        </td>
-                                    </tr>
+                                    <tr><td colSpan={6} className="p-12 text-center text-gray-400 font-bold italic">No custom requests.</td></tr>
                                 ) : (
-                                    customLeads.map((lead: any) => (
-                                        <CustomLeadRow 
-                                            key={lead.id} 
-                                            lead={lead} 
-                                            canManage={canManage}
-                                        />
+                                    customLeads.map((lead) => (
+                                        <CustomLeadRow key={lead.id} lead={lead} canManage={canManage} />
                                     ))
                                 )
                             )}
                         </tbody>
                     </table>
+
+                    {/* PAGINATION UI */}
+                    {totalPages > 1 && (
+                        <div className="p-4 border-t border-gray-100 lead-border-main bg-gray-50/30 lead-bg-muted">
+                            <Pagination currentPage={currentPage} totalPages={totalPages} />
+                        </div>
+                    )}
                 </div>
             </div>
         </main>

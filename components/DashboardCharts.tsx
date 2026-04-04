@@ -66,7 +66,23 @@ export default function DashboardCharts({ revenueData, statusData }: { revenueDa
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F0F2F7" />
                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#8A93A7', fontWeight: 600 }} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#8A93A7', fontWeight: 600 }} tickFormatter={(value) => `Rs ${value/1000}k`} />
+                <YAxis 
+  axisLine={false} 
+  tickLine={false} 
+  tick={{ fontSize: 12, fill: '#8A93A7', fontWeight: 600 }} 
+  tickFormatter={(value) => {
+    if (value >= 1000000) return `Rs ${value / 1000000}M`;
+    return `Rs ${value / 1000}k`;
+  }} 
+/><YAxis 
+  axisLine={false} 
+  tickLine={false} 
+  tick={{ fontSize: 12, fill: '#8A93A7', fontWeight: 600 }} 
+  tickFormatter={(value) => {
+    if (value >= 1000000) return `Rs ${value / 1000000}M`;
+    return `Rs ${value / 1000}k`;
+  }} 
+/>
                 
                 <Tooltip
                   contentStyle={{ backgroundColor: '#fff', borderRadius: '16px', border: '1px solid #E5E9F2', boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}

@@ -4,7 +4,6 @@ import { Geist, Geist_Mono, Poppins, Montez } from "next/font/google";
 import "./globals.css";
 import "./tailwind.config";
 import ScrollToTop from '@/components/ScrollToTop';
-import WhatsAppButton from '@/components/WhatsAppButton';
 import ToastProvider from '@/components/ToastProvider'; 
 import { ThemeProvider } from '@/components/ThemeProvider'; // <-- 1. Import ThemeProvider
 import prisma from '@/lib/prisma';
@@ -64,7 +63,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             {children}
             
             <ScrollToTop />
-            <WhatsAppButton />
+           
           </ThemeProvider>
         </body>
       </html>

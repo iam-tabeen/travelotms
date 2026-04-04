@@ -180,7 +180,7 @@ export default async function FinanceDashboard() {
                 {/* --- HEADER WITH EXPORT BUTTON --- */}
                 <div className="bg-white rounded-[24px] shadow-sm border border-gray-100 p-6 md:p-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 transition-colors fin-bg-card">
                     <div>
-                        <h1 className="text-2xl md:text-3xl font-black text-[#0A1628] uppercase tracking-tighter flex items-center gap-3 fin-text-primary">
+                        <h1 className="text-2xl md:text-3xl font-black text-[#0A1628] tracking-tighter flex items-center gap-3 fin-text-primary">
                             <Wallet className="text-[#2563EB]" size={32} />
                             Finances & Billing
                         </h1>
@@ -193,7 +193,7 @@ export default async function FinanceDashboard() {
                 {/* --- REAL FINANCIAL METRICS --- */}
                 <div className="metrics-grid-container">
                     
-                    <div className="bg-white rounded-[24px] p-5 md:p-6 border border-gray-100 border-b-[6px] border-b-green-500 shadow-sm flex items-center gap-4 transition-colors fin-metrics-card">
+                    <div className="bg-white rounded-[24px] p-5 md:p-6 border border-gray-100 border-b-[3px] border-b-green-500 shadow-sm flex items-center gap-4 transition-colors fin-metrics-card">
                         <div className="w-12 h-12 rounded-full bg-green-50 text-green-600 flex items-center justify-center shrink-0 transition-colors fin-badge-green">
                             <DollarSign size={24} />
                         </div>
@@ -203,7 +203,7 @@ export default async function FinanceDashboard() {
                         </div>
                     </div>
 
-                    <div className="bg-white rounded-[24px] p-5 md:p-6 border border-gray-100 border-b-[6px] border-b-orange-500 shadow-sm flex items-center gap-4 transition-colors fin-metrics-card">
+                    <div className="bg-white rounded-[24px] p-5 md:p-6 border border-gray-100 border-b-[3px] border-b-orange-500 shadow-sm flex items-center gap-4 transition-colors fin-metrics-card">
                         <div className="w-12 h-12 rounded-full bg-orange-50 text-orange-500 flex items-center justify-center shrink-0 transition-colors fin-badge-orange">
                             <CreditCard size={24} />
                         </div>
@@ -213,7 +213,7 @@ export default async function FinanceDashboard() {
                         </div>
                     </div>
 
-                    <div className="bg-white rounded-[24px] p-5 md:p-6 border border-gray-100 border-b-[6px] border-b-blue-500 shadow-sm flex items-center gap-4 transition-colors fin-metrics-card">
+                    <div className="bg-white rounded-[24px] p-5 md:p-6 border border-gray-100 border-b-[3px] border-b-blue-500 shadow-sm flex items-center gap-4 transition-colors fin-metrics-card">
                         <div className="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 transition-colors fin-badge-blue">
                             <Receipt size={24} />
                         </div>
