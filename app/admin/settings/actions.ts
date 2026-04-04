@@ -10,6 +10,8 @@ export async function updateAgencySettings(formData: FormData) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
+  
+
   // We generate a 100% guaranteed unique email using your local Clerk ID.
   // This ensures your local development never collides with your live Supabase data!
   const guaranteedUniqueEmail = `admin-${userId}@axius.local`;
@@ -51,6 +53,9 @@ export async function updateAgencySettings(formData: FormData) {
     // --- NEW: Extract the Financial Setting Checkbox ---
     // If the checkbox is checked, it sends 'true', otherwise it returns null
     const allowPartialPayments = formData.get('allowPartialPayments') === 'true';
+    const contactEmail = (formData.get('contactEmail') as string) || null;
+
+    
 
     await prisma.tenant.upsert({
       where: { userId: userId },
@@ -67,6 +72,7 @@ export async function updateAgencySettings(formData: FormData) {
         navlink: (formData.get('navlink') as string) || "#111827",
         cardColor: (formData.get('cardColor') as string) || "#111827",
         footerColor: (formData.get('footerColor') as string) || "#111827",
+        contactEmail: contactEmail,
       },
       create: {
         userId: userId,
@@ -75,6 +81,7 @@ export async function updateAgencySettings(formData: FormData) {
         companyName: companyName,
         logoUrl: finalLogoUrl,
         backupEmail: finalBackupEmail, 
+        contactEmail: contactEmail,
         allowPartialPayments: allowPartialPayments, // <-- Added here
         primaryColor: (formData.get('primaryColor') as string) || "#003580",
         accentColor: (formData.get('accentColor') as string) || "#FF8C00",

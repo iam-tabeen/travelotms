@@ -32,6 +32,7 @@ model Tenant {
   tours           Tour[]
   backups         Backup[]
   backupEmail     String?   
+  contactEmail  String?
 
   allowPartialPayments Boolean @default(false) 
 

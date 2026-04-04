@@ -144,6 +144,25 @@ export default async function SettingsPage() {
             </p>
           </div>
 
+          // Is file mein ye naya section add karein:
+
+<div className="space-y-4 pt-6 border-t border-gray-100 set-border-subtle">
+  <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.4em] set-text-secondary">
+    Leads & Notifications Email
+  </label>
+  <input 
+    type="email"
+    name="contactEmail" 
+    defaultValue={tenant?.contactEmail || ""} 
+    placeholder="e.g., bookings@axiusdigital.com"
+    className="w-full p-5 md:p-6 bg-gray-50 border-2 border-gray-100 rounded-2xl outline-none transition-all font-bold text-gray-900 text-lg shadow-inner set-input"
+    required
+  />
+  <p className="text-xs text-gray-500 set-text-secondary mt-2">
+    Note: Is email par aapko website ke Contact Form, New Bookings, aur Custom Tour requests ki notifications milengi.
+  </p>
+</div>
+
           {/* FINANCIAL SETTINGS SECTION */}
           <div className="pt-8 border-t border-gray-100 set-border-subtle">
             <h2 className="text-lg font-black text-gray-900 mb-4 set-text-primary">Financial Settings</h2>
