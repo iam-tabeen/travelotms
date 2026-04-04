@@ -159,7 +159,7 @@ export default async function SettingsPage() {
     required
   />
   <p className="text-xs text-gray-500 set-text-secondary mt-2">
-    Note: Is email par aapko website ke Contact Form, New Bookings, aur Custom Tour requests ki notifications milengi.
+    You will receive Contact Form, New Bookings, and Custom Tour requests notifications on this email address.
   </p>
 </div>
 
