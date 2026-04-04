@@ -144,10 +144,10 @@ export default async function SettingsPage() {
             </p>
           </div>
 
-          // Is file mein ye naya section add karein:
+       
 
 <div className="space-y-4 pt-6 border-t border-gray-100 set-border-subtle">
-  <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.4em] set-text-secondary">
+  <label className="text-sm font-bold text-gray-700 set-text-primary">
     Leads & Notifications Email
   </label>
   <input 
@@ -155,7 +155,7 @@ export default async function SettingsPage() {
     name="contactEmail" 
     defaultValue={tenant?.contactEmail || ""} 
     placeholder="e.g., bookings@axiusdigital.com"
-    className="w-full p-5 md:p-6 bg-gray-50 border-2 border-gray-100 rounded-2xl outline-none transition-all font-bold text-gray-900 text-lg shadow-inner set-input"
+    className="w-full px-4 py-3  bg-gray-50 border-2 border-gray-100 rounded-2xl outline-none transition-all  text-gray-900  shadow-inner set-input"
     required
   />
   <p className="text-xs text-gray-500 set-text-secondary mt-2">
