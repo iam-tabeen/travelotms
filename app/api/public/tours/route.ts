@@ -1,30 +1,19 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma'; // Using our Turbopack-safe import!
+import prisma from '@/lib/prisma'; 
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
     try {
-        // 1. Check for the API Key sent by the frontend
-        const apiKey = request.headers.get('x-api-key');
-        
-        if (!apiKey) {
-            return NextResponse.json({ success: false, error: "Unauthorized: Missing API Key" }, { status: 401 });
-        }
-
-        // 2. Find which agency owns this API Key
-        const keyRecord = await prisma.apiKey.findUnique({
-            where: { key: apiKey },
-            include: { tenant: true }
-        });
-
-        // 3. Security check: Does the key exist? Is the agency active?
-        if (!keyRecord || !keyRecord.tenant || !keyRecord.tenant.isActive) {
-            return NextResponse.json({ success: false, error: "Unauthorized or Agency Suspended" }, { status: 401 });
-        }
-
-        const tenantId = keyRecord.tenantId;
-
-        // 4. Extract search and sort filters from the URL
+        // 1. Get Agency ID from URL (No API Key needed for public viewing)
         const { searchParams } = new URL(request.url);
+        const agencyId = searchParams.get('agencyId');
+        
+        if (!agencyId) {
+            return NextResponse.json({ success: false, error: "Agency ID is required" }, { status: 400 });
+        }
+
+        // 2. Extract search and sort filters
         const search = searchParams.get('search') || '';
         const sort = searchParams.get('sort') || 'newest';
 
@@ -32,9 +21,12 @@ export async function GET(request: Request) {
         if (sort === 'price_asc') orderBy = { basePrice: 'asc' };
         if (sort === 'price_desc') orderBy = { basePrice: 'desc' };
 
-        // 5. Fetch the agency and its ACTIVE tours
+        // 3. Fetch the agency and its ACTIVE tours
         const agency = await prisma.tenant.findUnique({
-            where: { id: tenantId },
+            where: { 
+                id: agencyId,
+                isActive: true // Security: Don't show tours if agency is suspended
+            },
             include: {
                 tours: {
                     where: { 
@@ -51,8 +43,12 @@ export async function GET(request: Request) {
             }
         });
 
-        // 6. Handle the custom duration sorting
-        if (agency && agency.tours) {
+        if (!agency) {
+            return NextResponse.json({ success: false, error: "Agency not found or inactive" }, { status: 404 });
+        }
+
+        // 4. Handle the custom duration sorting
+        if (agency.tours) {
             if (sort === 'duration_asc') {
                 agency.tours.sort((a: any, b: any) => parseInt(a.duration) - parseInt(b.duration));
             } else if (sort === 'duration_desc') {
@@ -60,7 +56,7 @@ export async function GET(request: Request) {
             }
         }
 
-        // 7. Send the data back to the frontend!
+        // 5. Send the data back!
         return NextResponse.json({ success: true, agency });
 
     } catch (error) {
