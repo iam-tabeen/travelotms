@@ -55,6 +55,8 @@ export async function updateBookingStatus(bookingId: string, newStatus: string) 
     // NEW: Refresh the dashboard too, so the capacity progress bar updates instantly!
     revalidatePath('/dashboard'); 
 
+    return { success: true, status: newStatus };
+
   } catch (error) {
     console.error("Error updating booking status:", error);
     throw new Error("Failed to update status");
