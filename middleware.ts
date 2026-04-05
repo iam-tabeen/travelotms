@@ -2,7 +2,7 @@ import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 
 // 1. Define exactly what is protected and what is public
-const isProtectedRoute = createRouteMatcher(['/admin(.*)']);
+const isProtectedRoute = createRouteMatcher(['/dashboard(.*)']);
 const isPublicApiRoute = createRouteMatcher(['/api/public(.*)']);
 
 export default clerkMiddleware(async (auth, req) => {
@@ -11,7 +11,7 @@ export default clerkMiddleware(async (auth, req) => {
 
   // A. SUBDOMAIN ROUTING: 
   if (hostname.startsWith('app.') && pathname === '/') {
-    return NextResponse.redirect(new URL('/admin', req.url));
+    return NextResponse.redirect(new URL('/dashboard', req.url));
   }
 
   // B. PUBLIC API BYPASS:
