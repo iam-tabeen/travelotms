@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useTransition, useOptimistic } from "react";
 import { updateBookingStatus } from "@/app/dashboard/leads/actions";
 import { ChevronDown } from "lucide-react";
 
@@ -11,31 +11,30 @@ export default function BookingStatusDropdown({
   bookingId: string; 
   currentStatus: string; 
 }) {
-  // 1. useTransition hook for background server updates
   const [isPending, startTransition] = useTransition();
   
-  // 2. Local state for instant UI update
-  const [optimisticStatus, setOptimisticStatus] = useState(currentStatus);
+  // 1. The Ultimate Next.js Fix: useOptimistic Hook
+  const [optimisticStatus, setOptimisticStatus] = useOptimistic(
+    currentStatus,
+    (state, newStatus: string) => newStatus // State ko fauran naye status se replace kar do
+  );
 
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newStatus = e.target.value;
     
-    // UI FAURAN UPDATE HO JAYEGA
-    setOptimisticStatus(newStatus);
-
-    // Server update background mein chalne dain
     startTransition(async () => {
+      // Yeh line server ka wait kiye bina UI ko instantly update karegi (0.001 seconds mein)
+      setOptimisticStatus(newStatus);
+
+      // Phir aaram se background mein server ko request bhejti rahegi
       try {
         await updateBookingStatus(bookingId, newStatus);
       } catch (error) {
         alert("Failed to save changes.");
-        // Agar error aaye toh wapas purana status laga dain
-        setOptimisticStatus(currentStatus);
       }
     });
   };
 
-  // 1. Separate the Backgrounds from the Text Colors
   const themeColors: Record<string, { bg: string, text: string }> = {
     PENDING: {
       bg: "bg-orange-100 border-orange-300 dark:bg-orange-500/10 dark:border-orange-500/30",
@@ -51,7 +50,6 @@ export default function BookingStatusDropdown({
     }
   };
 
-  // Yahan ab 'currentStatus' ki jagah 'optimisticStatus' check hoga taake color fauran change ho
   const activeTheme = themeColors[optimisticStatus] || {
     bg: "bg-gray-100 border-gray-300 dark:bg-gray-800 dark:border-gray-600",
     text: "text-gray-800 dark:text-gray-200"
@@ -62,16 +60,15 @@ export default function BookingStatusDropdown({
       <select 
         value={optimisticStatus}
         onChange={handleChange}
-        disabled={isPending}
+        // Native 'disabled' ki jagah pointer-events-none use kiya taake browser text update hone se na rokay
         className={`
           appearance-none border-[1.5px] rounded-full 
           pl-4 pr-10 py-1.5 min-w-[140px]
           outline-none font-black text-[10px] uppercase tracking-widest 
-          cursor-pointer transition-all
+          cursor-pointer transition-all duration-200
           ${activeTheme.bg} 
-          /* Force the select to inherit the color from the wrapper */
           text-inherit
-          ${isPending ? 'opacity-50 cursor-wait' : 'hover:shadow-md active:scale-95'}
+          ${isPending ? 'opacity-60 pointer-events-none select-none' : 'hover:shadow-md active:scale-95'}
         `}
       >
         <option value="PENDING" className="text-gray-900 bg-white dark:bg-slate-900 dark:text-white">Pending</option>
