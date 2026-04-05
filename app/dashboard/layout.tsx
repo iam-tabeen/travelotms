@@ -2,10 +2,10 @@ import React from 'react';
 import { redirect } from 'next/navigation';
 
 // 1. IMPORT YOUR COMPONENTS & NEW HELPER
-import AdminSidebar from '@/components/dashboardSidebar'; 
+import DashboardSidebar from '@/components/dashboardSidebar'; 
 import { getUserAccess } from '@/lib/getTenant';
 
-export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   
   // 1. Fetch the access object containing the tenant and the user's role
   const access = await getUserAccess();
@@ -54,7 +54,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <div className="flex min-h-screen">
         
         {/* 1. PASS THE ROLE PROP TO THE SIDEBAR! */}
-        <AdminSidebar role={role} />
+        <DashboardSidebar role={role} />
 
         {/* 2. The Main Content Area */}
         <div className="flex-1 flex flex-col min-w-0 transition-all duration-300">

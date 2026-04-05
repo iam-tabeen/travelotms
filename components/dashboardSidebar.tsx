@@ -11,7 +11,7 @@ import {
   Moon, Sun
 } from 'lucide-react';
 
-export default function AdminSidebar({ role = 'VIEWER' }: { role?: string }) {
+export default function DashboardSidebar({ role = 'VIEWER' }: { role?: string }) {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
