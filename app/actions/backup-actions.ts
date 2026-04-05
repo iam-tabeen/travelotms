@@ -109,7 +109,7 @@ export async function createBackup(tenantId: string, type: 'MANUAL' | 'AUTOMATIC
             }
         });
 
-        revalidatePath('/admin/backups');
+        revalidatePath('/dashboard/backups');
         return { success: true };
 
     } catch (error: any) {

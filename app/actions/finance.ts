@@ -43,8 +43,8 @@ export async function logPayment(bookingId: string, amount: number, method: stri
         ]);
 
         // 4. Refresh the pages so the UI updates instantly
-        revalidatePath('/admin/leads');
-        revalidatePath('/admin/finance');
+        revalidatePath('/dashboard/leads');
+        revalidatePath('/dashboard/finance');
         
         return { success: true };
     } catch (error) {

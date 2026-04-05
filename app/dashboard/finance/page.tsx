@@ -327,7 +327,7 @@ export default async function FinanceDashboard() {
                                                 <td className="px-5 md:px-8 py-5 align-middle text-right border-none">
                                                     <div className="flex justify-end w-full">
                                                         <Link 
-                                                            href={`/admin/leads?tab=${lead.type}&search=${encodeURIComponent(lead.customerEmail)}&open=${lead.id}`}
+                                                            href={`/dashboard/leads?tab=${lead.type}&search=${encodeURIComponent(lead.customerEmail)}&open=${lead.id}`}
                                                             className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-xl text-xs font-bold transition-all shadow-sm fin-btn"
                                                         >
                                                             Log Payment

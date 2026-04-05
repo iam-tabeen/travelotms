@@ -54,7 +54,7 @@ export async function inviteTeamMember(formData: FormData) {
         });
 
         // 4. Refresh the team page
-        revalidatePath('/admin/team');
+        revalidatePath('/dashboard/team');
         return { success: true };
 
     } catch (error) {
@@ -71,7 +71,7 @@ export async function updateTeamMemberRole(memberId: string, newRole: 'AGENT' | 
             where: { id: memberId },
             data: { role: newRole }
         });
-        revalidatePath('/admin/team');
+        revalidatePath('/dashboard/team');
         return { success: true };
     } catch (error) {
         console.error("Failed to update role:", error);
@@ -84,7 +84,7 @@ export async function removeTeamMember(memberId: string) {
         await prisma.teamMember.delete({
             where: { id: memberId }
         });
-        revalidatePath('/admin/team');
+        revalidatePath('/dashboard/team');
         return { success: true };
     } catch (error) {
         console.error("Failed to remove member:", error);

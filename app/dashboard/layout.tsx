@@ -2,7 +2,7 @@ import React from 'react';
 import { redirect } from 'next/navigation';
 
 // 1. IMPORT YOUR COMPONENTS & NEW HELPER
-import AdminSidebar from '@/components/AdminSidebar'; 
+import AdminSidebar from '@/components/dashboardSidebar'; 
 import { getUserAccess } from '@/lib/getTenant';
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {

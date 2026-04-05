@@ -24,7 +24,7 @@ export default function LeadsFilter({ activeTab }: { activeTab: string }) {
         if (newStatus !== 'ALL') params.set('status', newStatus); 
         
         startTransition(() => {
-            router.push(`/admin/leads?${params.toString()}`);
+            router.push(`/dashboard/leads?${params.toString()}`);
         });
     };
 

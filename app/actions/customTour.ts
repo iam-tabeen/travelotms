@@ -12,7 +12,7 @@ export async function updateCustomLeadStatus(leadId: string, newStatus: string) 
       });
       
       // Refresh the leads page so the UI updates instantly
-      revalidatePath('/admin/leads');
+      revalidatePath('/dashboard/leads');
       return { success: true };
     } catch (error) {
       console.error("Failed to update custom lead status:", error);

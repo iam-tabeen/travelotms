@@ -1,4 +1,4 @@
-// app/admin/leads/actions.ts
+// app/dashboard/leads/actions.ts
 "use server";
 
 import prisma from '@/lib/prisma';
@@ -50,10 +50,10 @@ export async function updateBookingStatus(bookingId: string, newStatus: string) 
     }
     
     // Refresh the leads page so the new status reflects immediately
-    revalidatePath('/admin/leads'); 
+    revalidatePath('/dashboard/leads'); 
     
     // NEW: Refresh the dashboard too, so the capacity progress bar updates instantly!
-    revalidatePath('/admin'); 
+    revalidatePath('/dashboard'); 
 
   } catch (error) {
     console.error("Error updating booking status:", error);

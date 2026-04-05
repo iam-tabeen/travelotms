@@ -207,7 +207,7 @@ export async function quickUpdateBookingMode(tourId: string, bookingMode: string
     data: { bookingMode },
   });
 
-  revalidatePath('/admin/tours');
+  revalidatePath('/dashboard/tours');
   // THE FIX: Return a success object so the client dropdown component can fire a toast directly!
   return { success: true };
 }

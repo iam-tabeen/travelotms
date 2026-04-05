@@ -31,14 +31,14 @@ export default function AdminSidebar({ role = 'VIEWER' }: { role?: string }) {
   const ADMIN_ONLY = ['OWNER', 'ADMIN'];
 
   const menuItems = [
-    { name: 'Dashboard', path: '/admin', icon: LayoutDashboard, allowed: ALL_ROLES },
-    { name: 'All Tours', path: '/admin/tours', icon: Map, allowed: ADMIN_ONLY },
-    { name: 'Leads', path: '/admin/leads', icon: Users, allowed: ALL_ROLES },
-    { name: 'Finance', path: '/admin/finance', icon: Landmark, allowed: ADMIN_ONLY },
-    { name: 'Add Tour', path: '/admin/add-tour', icon: PlusCircle, allowed: ADMIN_ONLY },
-    { name: 'Departure Calendar', path: '/admin/calendar', icon: CalendarDays, allowed: ALL_ROLES },
-    { name: 'Promo Codes', path: '/admin/promos', icon: Tag, allowed: ADMIN_ONLY },
-    { name: 'Backups', path: '/admin/backups', icon: DatabaseBackup, allowed: ADMIN_ONLY },
+    { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, allowed: ALL_ROLES },
+    { name: 'All Tours', path: '/dashboard/tours', icon: Map, allowed: ADMIN_ONLY },
+    { name: 'Leads', path: '/dashboard/leads', icon: Users, allowed: ALL_ROLES },
+    { name: 'Finance', path: '/dashboard/finance', icon: Landmark, allowed: ADMIN_ONLY },
+    { name: 'Add Tour', path: '/dashboard/add-tour', icon: PlusCircle, allowed: ADMIN_ONLY },
+    { name: 'Departure Calendar', path: '/dashboard/calendar', icon: CalendarDays, allowed: ALL_ROLES },
+    { name: 'Promo Codes', path: '/dashboard/promos', icon: Tag, allowed: ADMIN_ONLY },
+    { name: 'Backups', path: '/dashboard/backups', icon: DatabaseBackup, allowed: ADMIN_ONLY },
   ];
 
   const visibleMenuItems = menuItems.filter(item => item.allowed.includes(role));
@@ -286,13 +286,13 @@ export default function AdminSidebar({ role = 'VIEWER' }: { role?: string }) {
               <div className="cn-menu-heading">System</div>
               <ul className="cn-menu-list">
                 <li>
-                  <Link href="/dashboard/team" className={`cn-menu-link ${pathname === '/admin/team' ? 'active' : ''}`} title={isCollapsed ? 'Team Members' : ''}>
+                  <Link href="/dashboard/team" className={`cn-menu-link ${pathname === '/dashboard/team' ? 'active' : ''}`} title={isCollapsed ? 'Team Members' : ''}>
                     <Users size={22} />
                     <span className="cn-menu-label font-bold text-sm">Team Members</span>
                   </Link>
                 </li>
                 <li>
-                  <Link href="/dashboard/settings" className={`cn-menu-link ${pathname === '/admin/settings' ? 'active' : ''}`} title={isCollapsed ? 'Agency Settings' : ''}>
+                  <Link href="/dashboard/settings" className={`cn-menu-link ${pathname === '/dashboard/settings' ? 'active' : ''}`} title={isCollapsed ? 'Agency Settings' : ''}>
                     <Settings size={22} />
                     <span className="cn-menu-label font-bold text-sm">Agency Settings</span>
                   </Link>

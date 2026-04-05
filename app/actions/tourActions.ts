@@ -28,7 +28,7 @@ export async function duplicateTour(tourId: string) {
         });
 
         // 4. Refresh the page data
-        revalidatePath('/admin/tours');
+        revalidatePath('/dashboard/tours');
         
         return { success: true, newTourId: newTour.id };
 

@@ -101,8 +101,8 @@ export async function updateAgencySettings(formData: FormData) {
   }
 
   // Redirect to Dashboard after successful save
-  revalidatePath('/admin/settings');
-  revalidatePath('/admin/backups'); 
+  revalidatePath('/dashboard/settings');
+  revalidatePath('/dashboard/backups'); 
   revalidatePath('/');
   redirect('/dashboard'); 
 } 

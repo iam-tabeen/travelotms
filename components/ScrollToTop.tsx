@@ -8,7 +8,7 @@ export default function ScrollToTop() {
   const pathname = usePathname();
 
   // Check if we are anywhere inside the admin dashboard
-  const isAdmin = pathname?.startsWith('/admin');
+  const isAdmin = pathname?.startsWith('/dashboard');
 
   useEffect(() => {
     const toggleVisibility = () => {

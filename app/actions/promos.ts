@@ -26,7 +26,7 @@ export async function createPromoCode(tenantId: string, formData: FormData) {
             }
         });
         
-        revalidatePath('/admin/promos');
+        revalidatePath('/dashboard/promos');
         return { success: true };
     } catch (error) {
         console.error("Failed to create promo code:", error);
@@ -40,7 +40,7 @@ export async function togglePromoStatus(id: string, currentStatus: boolean) {
             where: { id },
             data: { isActive: !currentStatus }
         });
-        revalidatePath('/admin/promos');
+        revalidatePath('/dashboard/promos');
         return { success: true };
     } catch (error) {
         console.error("Failed to toggle promo:", error);

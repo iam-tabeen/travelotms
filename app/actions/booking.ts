@@ -87,7 +87,7 @@ export async function submitBooking(
             <p style="margin: 8px 0;"><strong>Notes:</strong> ${specialNotes || 'None'}</p>
           </div>
           <br/>
-          <a href="${process.env.NEXT_PUBLIC_APP_URL}/admin/leads" style="background-color: #003580; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold;">View Lead</a>
+          <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard/leads" style="background-color: #003580; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold;">View Lead</a>
         </div>
       `
     };
