@@ -17,7 +17,7 @@ export default async function LeadsDashboard({
   searchParams: Promise<{ [key: string]: string | undefined }>;
 }) {
     const access = await getUserAccess();
-    if (!access) redirect('/admin/settings');
+    if (!access) redirect('/dashboard/settings');
 
     const { tenant, role } = access;
     const canManage = role !== 'VIEWER';

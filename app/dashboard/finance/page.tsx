@@ -9,12 +9,12 @@ export const dynamic = 'force-dynamic';
 
 export default async function FinanceDashboard() {
     const access = await getUserAccess();
-    if (!access) redirect('/admin/settings');
+    if (!access) redirect('/dashboard/settings');
     
     const { tenant, role } = access;
 
     if (role !== 'OWNER' && role !== 'ADMIN') {
-        redirect('/admin'); 
+        redirect('/dashboard'); 
     }
 
     const isPro = tenant.planTier === 'PRO';

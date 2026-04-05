@@ -286,13 +286,13 @@ export default function AdminSidebar({ role = 'VIEWER' }: { role?: string }) {
               <div className="cn-menu-heading">System</div>
               <ul className="cn-menu-list">
                 <li>
-                  <Link href="/admin/team" className={`cn-menu-link ${pathname === '/admin/team' ? 'active' : ''}`} title={isCollapsed ? 'Team Members' : ''}>
+                  <Link href="/dashboard/team" className={`cn-menu-link ${pathname === '/admin/team' ? 'active' : ''}`} title={isCollapsed ? 'Team Members' : ''}>
                     <Users size={22} />
                     <span className="cn-menu-label font-bold text-sm">Team Members</span>
                   </Link>
                 </li>
                 <li>
-                  <Link href="/admin/settings" className={`cn-menu-link ${pathname === '/admin/settings' ? 'active' : ''}`} title={isCollapsed ? 'Agency Settings' : ''}>
+                  <Link href="/dashboard/settings" className={`cn-menu-link ${pathname === '/admin/settings' ? 'active' : ''}`} title={isCollapsed ? 'Agency Settings' : ''}>
                     <Settings size={22} />
                     <span className="cn-menu-label font-bold text-sm">Agency Settings</span>
                   </Link>

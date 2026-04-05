@@ -218,7 +218,7 @@ export default function DepartureCalendar({ events }: { events: CalendarEvent[] 
                         {/* Footer Actions */}
                         <div className="p-4 border-t border-gray-100 bg-gray-50/50 flex justify-end transition-colors duration-300 cal-modal-footer">
                             <a 
-                                href="/admin/tours" 
+                                href="/dashboard/tours" 
                                 className="bg-white border border-gray-200 text-gray-700 text-xs font-bold px-4 py-2.5 rounded-xl hover:bg-gray-50 transition-colors shadow-sm cursor-pointer cal-btn-outline"
                             >
                                 Go to Tours List

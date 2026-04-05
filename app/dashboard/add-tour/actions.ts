@@ -108,7 +108,7 @@ export async function createTour(formData: FormData) {
   });
 
   // THE FIX: Added the ?success parameter to trigger the Toast!
-  redirect('/admin/tours?success=Tour_Added_Successfully!');
+  redirect('/dashboard/tours?success=Tour_Added_Successfully!');
 }
 
 export async function updateTour(tourId: string, formData: FormData) {
@@ -183,7 +183,7 @@ export async function updateTour(tourId: string, formData: FormData) {
   });
 
   // THE FIX: Added the ?success parameter to trigger the Toast!
-  redirect('/admin/tours?success=Tour_Updated_Successfully!');
+  redirect('/dashboard/tours?success=Tour_Updated_Successfully!');
 }
 
 export async function deleteTour(tourId: string) {
@@ -195,7 +195,7 @@ export async function deleteTour(tourId: string) {
   });
 
   // THE FIX: Redirects back to the same page but injects the success message
-  redirect('/admin/tours?success=Tour_Deleted_Successfully');
+  redirect('/dashboard/tours?success=Tour_Deleted_Successfully');
 }
 
 export async function quickUpdateBookingMode(tourId: string, bookingMode: string) {

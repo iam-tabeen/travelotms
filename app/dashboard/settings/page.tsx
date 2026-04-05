@@ -4,6 +4,7 @@ import { updateAgencySettings } from './actions';
 import Link from 'next/link';
 import { Lock } from 'lucide-react';
 import { getUserAccess } from '@/lib/getTenant'; 
+import SettingsSubmitButton from '@/components/SettingsSubmitButton'; // <-- YEH IMPORT KAREIN
 
 export default async function SettingsPage() {
   const { userId } = await auth();
@@ -12,7 +13,7 @@ export default async function SettingsPage() {
   const access = await getUserAccess();
 
   if (access && access.role !== 'OWNER' && access.role !== 'ADMIN') {
-      redirect('/admin'); 
+      redirect('/dashboard'); 
   }
 
   const tenant = access?.tenant || null;
@@ -47,7 +48,7 @@ export default async function SettingsPage() {
       <div className="max-w-2xl mx-auto bg-white rounded-[2.5rem] p-8 md:p-12 shadow-2xl border border-gray-100 transition-colors duration-300 set-bg-card set-border-subtle">
         <div className="mb-12 flex justify-between items-center">
           <h1 className="text-2xl md:text-3xl font-black uppercase tracking-tight text-gray-900 set-text-primary">Branding</h1>
-          <Link href="/admin" className="text-xs font-black text-gray-400 hover:text-gray-900 tracking-widest uppercase transition-colors set-text-secondary">
+          <Link href="/dashboard" className="text-xs font-black text-gray-400 hover:text-gray-900 tracking-widest uppercase transition-colors set-text-secondary">
             ⬅ Dashboard
           </Link>
         </div>
@@ -199,12 +200,7 @@ export default async function SettingsPage() {
             </div>
           </div>
 
-          <button 
-            type="submit" 
-            className="w-full bg-[#003580] dark:bg-blue-600 text-white font-black py-5 md:py-6 rounded-2xl uppercase tracking-[0.3em] text-sm hover:scale-[1.02] transition-all shadow-2xl cursor-pointer"
-          >
-            Save Brand Settings
-          </button>
+          <SettingsSubmitButton />
         </form>
       </div>
     </main>

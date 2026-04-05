@@ -10,13 +10,13 @@ export const dynamic = 'force-dynamic';
 export default async function TeamDashboard() {
     const access = await getUserAccess();
     
-    if (!access) redirect('/admin/settings');
+    if (!access) redirect('/dashboard/settings');
 
     const { tenant, role } = access;
 
     // 🛡️ THE ROUTE GUARD: Kick out anyone who isn't an Owner or Admin
     if (role !== 'OWNER' && role !== 'ADMIN') {
-        redirect('/admin'); 
+        redirect('/dashboard'); 
     }
 
     const isPro = tenant.planTier === 'PRO';

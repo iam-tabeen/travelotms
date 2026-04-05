@@ -6,13 +6,13 @@ import { getUserAccess } from '@/lib/getTenant'; // <-- 1. Import the smart help
 export default async function EditTourPage({ params }: { params: Promise<{ id: string }> }) {
   // 2. Fetch the access object
   const access = await getUserAccess();
-  if (!access) redirect('/admin/settings');
+  if (!access) redirect('/dashboard/settings');
   
   const { tenant, role } = access;
 
   // 🛡️ THE ROUTE GUARD: Kick out anyone who isn't an Owner or Admin
   if (role !== 'OWNER' && role !== 'ADMIN') {
-      redirect('/admin'); 
+      redirect('/dashboard'); 
   }
 
   const { id } = await params;

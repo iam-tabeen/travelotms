@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function AdminDashboard() {
     const access = await getUserAccess();
-    if (!access) redirect('/admin/settings');
+    if (!access) redirect('/dashboard/settings');
     
     const { tenant, role } = access;
     
@@ -168,11 +168,11 @@ export default async function AdminDashboard() {
                     </div>
                     <div className="flex flex-col sm:flex-row w-full md:w-auto gap-3">
                         {canManageTours && (
-                            <Link href="/admin/tours" className="w-full sm:w-auto text-center bg-gray-50 border border-gray-200 hover:bg-gray-100 text-gray-700 px-6 py-3 rounded-xl text-sm font-bold transition-colors dash-btn-secondary">
+                            <Link href="/dashboard/tours" className="w-full sm:w-auto text-center bg-gray-50 border border-gray-200 hover:bg-gray-100 text-gray-700 px-6 py-3 rounded-xl text-sm font-bold transition-colors dash-btn-secondary">
                                 Manage Tours
                             </Link>
                         )}
-                        <Link href="/admin/leads" className="w-full sm:w-auto text-center bg-[#2563EB] hover:bg-[#1D4ED8] text-white px-6 py-3 rounded-xl text-sm font-bold transition-colors shadow-md">
+                        <Link href="/dashboard/leads" className="w-full sm:w-auto text-center bg-[#2563EB] hover:bg-[#1D4ED8] text-white px-6 py-3 rounded-xl text-sm font-bold transition-colors shadow-md">
                             View Leads
                         </Link>
                     </div>
@@ -267,7 +267,7 @@ export default async function AdminDashboard() {
                             </h3>
                             
                             {canManageTours && (
-                                <Link href="/admin/tours" className="text-xs font-bold text-[#2563EB] hover:text-blue-800 flex items-center gap-1 dash-text-blue">
+                                <Link href="/dashboard/tours" className="text-xs font-bold text-[#2563EB] hover:text-blue-800 flex items-center gap-1 dash-text-blue">
                                     View All <ArrowRight size={14} />
                                 </Link>
                             )}

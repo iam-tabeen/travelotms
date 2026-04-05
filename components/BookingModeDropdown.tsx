@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "react-hot-toast"; 
-import { quickUpdateBookingMode } from "@/app/admin/add-tour/actions";
+import { quickUpdateBookingMode } from "@/app/dashboard/add-tour/actions";
 
 export default function BookingModeDropdown({ 
   tourId, 

@@ -24,7 +24,7 @@ export default async function PromosDashboard() {
 
     // 🛡️ THE ROUTE GUARD: Kick out anyone who isn't an Owner or Admin
     if (role !== 'OWNER' && role !== 'ADMIN') {
-        redirect('/admin'); 
+        redirect('/dashboard'); 
     }
 
     // 3. Check if they are PRO

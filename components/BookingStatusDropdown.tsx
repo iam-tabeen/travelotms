@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { updateBookingStatus } from "@/app/admin/leads/actions";
+import { updateBookingStatus } from "@/app/dashboard/leads/actions";
 import { ChevronDown } from "lucide-react";
 
 export default function BookingStatusDropdown({ 

@@ -104,5 +104,5 @@ export async function updateAgencySettings(formData: FormData) {
   revalidatePath('/admin/settings');
   revalidatePath('/admin/backups'); 
   revalidatePath('/');
-  redirect('/admin'); 
+  redirect('/dashboard'); 
 } 

@@ -21,7 +21,7 @@ export default async function SuperAdminDashboard() {
     const { userId } = await auth();
 
     if (!userId || userId !== process.env.SUPER_ADMIN_ID) {
-        redirect('/admin'); // Kick them back to standard admin
+        redirect('/dashboard'); // Kick them back to standard admin
     }
 
     // 3. THE USERNAME & PASSWORD GATE (Cookie Check)

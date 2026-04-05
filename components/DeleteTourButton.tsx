@@ -1,6 +1,6 @@
 "use client";
 
-import { deleteTour } from "@/app/admin/add-tour/actions";
+import { deleteTour } from "@/app/dashboard/add-tour/actions";
 
 export default function DeleteTourButton({ tourId }: { tourId: string }) {
   const handleDelete = async () => {

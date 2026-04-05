@@ -14,13 +14,13 @@ export const dynamic = 'force-dynamic';
 export default async function AdminToursPage() {
   // 2. FETCH THE TENANT USING THE HELPER (Handles both Owners & Agents)
   const access = await getUserAccess();
-  if (!access) redirect('/admin/settings');
+  if (!access) redirect('/dashboard/settings');
   
   const { tenant, role } = access;
 
   // 🛡️ THE ROUTE GUARD: Kick out anyone who isn't an Owner or Admin
   if (role !== 'OWNER' && role !== 'ADMIN') {
-      redirect('/admin'); 
+      redirect('/dashboard'); 
   }
   // 3. FETCH DATA USING tenantId (NOT userId!)
   const tours = await prisma.tour.findMany({
@@ -147,7 +147,7 @@ export default async function AdminToursPage() {
             <h1 className="text-2xl md:text-3xl text-[#0A1628] tracking-tight tour-text-primary" style={{fontFamily: 'var(--font-poppins)', fontWeight:"600"}}>All Tours</h1>
             <p className="text-sm font-medium text-gray-500 mt-2 tour-text-secondary">Manage your active and draft expeditions.</p>
           </div>
-          <Link href="/admin/add-tour" className="w-full md:w-auto justify-center bg-[#2563EB] hover:bg-[#1D4ED8] text-white px-6 py-3 rounded-xl text-sm font-bold flex items-center gap-2 transition-colors shadow-md">
+          <Link href="/dashboard/add-tour" className="w-full md:w-auto justify-center bg-[#2563EB] hover:bg-[#1D4ED8] text-white px-6 py-3 rounded-xl text-sm font-bold flex items-center gap-2 transition-colors shadow-md">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Add New Tour
           </Link>
