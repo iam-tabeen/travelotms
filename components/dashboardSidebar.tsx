@@ -310,7 +310,7 @@ export default function DashboardSidebar({ role = 'VIEWER' }: { role?: string })
             <div className="cn-account-block">
               <div className="shrink-0 flex items-center justify-center">
               <UserButton 
-  afterSignOutUrl="/" 
+ 
   appearance={{ 
     elements: { 
       // 👇 This centers the button itself

@@ -44,7 +44,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   } as React.CSSProperties;
 
   return (
-    <ClerkProvider>
+    <ClerkProvider afterSignOutUrl="/dashboard">
       {/* 2. suppressHydrationWarning MUST be on the html tag for next-themes */}
       <html lang="en" suppressHydrationWarning>
         <body
