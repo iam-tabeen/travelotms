@@ -56,6 +56,7 @@ export async function updateAgencySettings(formData: FormData) {
     const contactEmail = (formData.get('contactEmail') as string) || null;
 
     const metaPixelId = formData.get("metaPixelId") as string;
+    const whatsappNumber = formData.get("whatsappNumber") as string; // <-- Add this
     
 
     await prisma.tenant.upsert({
@@ -75,6 +76,7 @@ export async function updateAgencySettings(formData: FormData) {
         footerColor: (formData.get('footerColor') as string) || "#111827",
         contactEmail: contactEmail,
         metaPixelId: metaPixelId || null,
+        whatsappNumber: whatsappNumber || null, // <-- Add this inside Prisma update
       },
       create: {
         userId: userId,

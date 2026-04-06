@@ -34,6 +34,7 @@ model Tenant {
   backupEmail     String?   
   contactEmail  String?
   metaPixelId      String?  
+  whatsappNumber   String?  // <-- Yeh nayi line add karein
 
   allowPartialPayments Boolean @default(false) 
 

@@ -155,6 +155,22 @@ export default function SettingsTabs({ tenant, isPro }: { tenant: any, isPro: bo
   </p>
 </div>
 
+<div className="space-y-4 pt-6 border-t border-gray-100 set-border-subtle">
+  <label className="text-sm font-bold text-gray-700 set-text-primary">
+    WhatsApp Number
+  </label>
+  <input 
+    type="text"
+    name="whatsappNumber" 
+    defaultValue={tenant?.whatsappNumber || ""} 
+    placeholder="e.g., 92320154876"
+    className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-2xl outline-none transition-all text-gray-900 shadow-inner set-input"
+  />
+  <p className="text-xs text-gray-500 set-text-secondary mt-2">
+    Enter number with country code but without the '+' sign (e.g., 92320154876).
+  </p>
+</div>
+
           <div className="pt-6 border-t border-gray-100 set-border-subtle">
             <h2 className="text-lg font-black text-gray-900 mb-4 set-text-primary">Financial Settings</h2>
             <div className={`p-6 border rounded-2xl flex items-start gap-4 transition-all ${

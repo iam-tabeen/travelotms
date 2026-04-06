@@ -27,6 +27,7 @@ export async function GET(request: Request) {
         footerColor: true,
         navlink: true,
         metaPixelId: true, // <-- 🚨 THE MAGIC LINE FOR META ADS 🚨
+        whatsappNumber: true, // <-- 🚨 THE MAGIC LINE FOR WHATSAPP
       }
     });
 
