@@ -33,6 +33,7 @@ model Tenant {
   backups         Backup[]
   backupEmail     String?   
   contactEmail  String?
+  metaPixelId      String?  
 
   allowPartialPayments Boolean @default(false) 
 

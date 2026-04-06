@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma'; // Adjust this import path to where your Prisma client lives
+
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
@@ -24,7 +25,8 @@ export async function GET(request: Request) {
         buttonColor: true,
         cardColor: true,
         footerColor: true,
-        navlink: true
+        navlink: true,
+        metaPixelId: true, // <-- 🚨 THE MAGIC LINE FOR META ADS 🚨
       }
     });
 
