@@ -55,6 +55,7 @@ export async function updateAgencySettings(formData: FormData) {
     const allowPartialPayments = formData.get('allowPartialPayments') === 'true';
     const contactEmail = (formData.get('contactEmail') as string) || null;
 
+    const metaPixelId = formData.get("metaPixelId") as string;
     
 
     await prisma.tenant.upsert({
@@ -73,6 +74,7 @@ export async function updateAgencySettings(formData: FormData) {
         cardColor: (formData.get('cardColor') as string) || "#111827",
         footerColor: (formData.get('footerColor') as string) || "#111827",
         contactEmail: contactEmail,
+        metaPixelId: metaPixelId || null,
       },
       create: {
         userId: userId,
