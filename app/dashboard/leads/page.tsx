@@ -32,8 +32,10 @@ export default async function LeadsDashboard({
     const companyDisplayName = tenant.companyName || "AXIUS DIGITAL";
     const isPro = tenant.planTier === 'PRO';
 
-    const regularCount = await prisma.booking.count({ where: { tenantId: tenant.id } });
-    const customCount = await prisma.customTourLead.count({ where: { tenantId: tenant.id } });
+    const [regularCount, customCount] = await Promise.all([
+        prisma.booking.count({ where: { tenantId: tenant.id } }),
+        prisma.customTourLead.count({ where: { tenantId: tenant.id } })
+    ]);
     const totalLeads = regularCount + customCount;
 
     let regularBookings: any[] = [];
@@ -72,31 +74,34 @@ export default async function LeadsDashboard({
     let totalPages = 1;
 
     if (activeTab === 'regular') {
-        const filteredCount = await prisma.booking.count({ where: regularWhereClause });
+        const [filteredCount, data] = await Promise.all([
+            prisma.booking.count({ where: regularWhereClause }),
+            prisma.booking.findMany({
+                where: regularWhereClause,
+                orderBy: orderBy,
+                take: ITEMS_PER_PAGE,
+                skip: skip,
+                include: { 
+                    tour: { select: { title: true } }, // Optimized
+                    payments: { orderBy: { date: 'desc' }, take: 1 } // Sirf latest payment chahiye
+                }
+            })
+        ]);
         totalPages = Math.ceil(filteredCount / ITEMS_PER_PAGE);
-
-        regularBookings = await prisma.booking.findMany({
-            where: regularWhereClause,
-            orderBy: orderBy,
-            take: ITEMS_PER_PAGE,
-            skip: skip,
-            include: { 
-                tour: { include: { itineraryDays: true } },
-                payments: { orderBy: { date: 'desc' } }
-            }
-        });
+        regularBookings = data;
     } else {
-        const filteredCount = await prisma.customTourLead.count({ where: customWhereClause });
+        const [filteredCount, data] = await Promise.all([
+            prisma.customTourLead.count({ where: customWhereClause }),
+            prisma.customTourLead.findMany({
+                where: customWhereClause,
+                take: ITEMS_PER_PAGE,
+                skip: skip,
+                orderBy: (sortQuery === 'price-desc' || sortQuery === 'price-asc') ? { createdAt: 'desc' } : orderBy
+            })
+        ]);
         totalPages = Math.ceil(filteredCount / ITEMS_PER_PAGE);
-
-        customLeads = await prisma.customTourLead.findMany({
-            where: customWhereClause,
-            take: ITEMS_PER_PAGE,
-            skip: skip,
-            orderBy: (sortQuery === 'price-desc' || sortQuery === 'price-asc') ? { createdAt: 'desc' } : orderBy
-        });
+        customLeads = data;
     }
-
     const exportData = activeTab === 'regular' ? regularBookings : customLeads;
 
     return (
