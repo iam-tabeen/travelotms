@@ -1,5 +1,6 @@
 import React from 'react';
 import { redirect } from 'next/navigation';
+import NextTopLoader from 'nextjs-toploader'; // 🚀 1. Naya Import Yahan Hai
 
 // 1. IMPORT YOUR COMPONENTS & NEW HELPER
 import DashboardSidebar from '@/components/dashboardSidebar'; 
@@ -40,6 +41,18 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <main style={{ ...globalTheme, fontFamily: "'DM Sans', sans-serif" }} className="min-h-screen bg-[#F4F7F9]">
+      
+      {/* 🚀 2. THE FIX: Yeh loader click karte hi top par chalna shuru ho jayega */}
+      <NextTopLoader 
+        color="#2563EB" 
+        height={3} 
+        showSpinner={false} 
+        easing="ease" 
+        speed={200} 
+        shadow="0 0 10px #2563EB,0 0 5px #2563EB" 
+        zIndex={1600}
+      />
+
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Serif+Display&display=swap');
         * { box-sizing: border-box; }
@@ -61,15 +74,15 @@ export default async function DashboardLayout({ children }: { children: React.Re
           
           {/* Mobile top spacer so content isn't hidden behind the floating hamburger menu */}
           <>
-  <style>{`
-    /* Force the dark background when the HTML tag has the .dark class */
-    html.dark .mobile-top-bar {
-      background-color: #0F172A !important;
-    }
-  `}</style>
+            <style>{`
+              /* Force the dark background when the HTML tag has the .dark class */
+              html.dark .mobile-top-bar {
+                background-color: #0F172A !important;
+              }
+            `}</style>
 
-  <div className="md:hidden h-16 bg-[#F4F7F9] shrink-0 transition-colors duration-300 mobile-top-bar"></div>
-</>
+            <div className="md:hidden h-16 bg-[#F4F7F9] shrink-0 transition-colors duration-300 mobile-top-bar"></div>
+          </>
           
           {children}
           
