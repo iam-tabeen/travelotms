@@ -1,22 +1,45 @@
 # Unified Travelo TMS — Netlify deployment
 
-The public website and admin dashboard now run as **one Next.js app** (`tour-agency-backend`). There is no separate client app or internal HTTP API.
+The public website and admin dashboard run as **one Next.js app**.
 
 ## Netlify setup
 
-1. Connect the repo and set **Base directory** to `tour-agency-backend` (or deploy only that folder).
-2. Build command: `npm run build`
-3. Plugin: `@netlify/plugin-nextjs` (configured in `netlify.toml`)
-4. Environment variables: same as before (`DATABASE_URL`, `DIRECT_URL`, Clerk keys, `EMAIL_USER`, etc.).  
-   You can remove `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_AGENCY_ID`, and `AGENCY_API_KEY` — they are no longer used.
+1. Import repo: https://github.com/iam-tabeen/travelotms
+2. Build command: `npm run build` (from `netlify.toml`)
+3. Add all env vars from your local `.env` (never commit `.env`)
 
-## Domains
+## URLs on Netlify
 
-- **Public site:** `yourdomain.com` → `/`, `/tours`, `/contact`, `/custom-tour`
-- **Admin:** `admin.yourdomain.com` → `/dashboard` (Clerk protected)
+Netlify gives **one** site URL, e.g. `https://travelotms.netlify.app`.
 
-On Netlify, use branch subdomains or `admin-*.netlify.app` as described in `middleware.ts`.
+| Area | URL |
+|------|-----|
+| Public site | `https://travelotms.netlify.app/` |
+| Tours | `https://travelotms.netlify.app/tours` |
+| **Dashboard** | `https://travelotms.netlify.app/dashboard` |
+| Sign in | `https://travelotms.netlify.app/sign-in` |
+
+Do **not** use `admin-travelotms.netlify.app` — that is a separate Netlify site name and will show "Site not found".
+
+When you add a custom domain later:
+
+- Public: `yourdomain.com`
+- Admin: `admin.yourdomain.com` (add as domain alias in Netlify → Domain management)
+
+## Clerk on Netlify
+
+In the [Clerk Dashboard](https://dashboard.clerk.com) → your app → **Paths / Domains**, add:
+
+- `https://travelotms.netlify.app`
+- Sign-in URL: `/sign-in`
+- Sign-up URL: `/sign-up`
+- After sign-in URL: `/dashboard`
+
+Required env vars:
+
+- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
+- `CLERK_SECRET_KEY`
 
 ## Performance
 
-Public pages use ISR (`revalidate` 120–600s) and `unstable_cache` for tenant/tour data. Dashboard mutations call `revalidateTours()` / `revalidateDashboard()` so the storefront stays fresh without slow cross-app API calls.
+Public pages use ISR and `unstable_cache`. Dashboard saves call `revalidateTours()` / `revalidateDashboard()` so the storefront stays fresh.
