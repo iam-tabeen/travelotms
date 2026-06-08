@@ -14,7 +14,7 @@ export default function SettingsSubmitButton() {
       className="w-full flex items-center justify-center gap-3 bg-[#003580] dark:bg-blue-600 text-white font-black py-5 md:py-6 rounded-2xl text-md transition-all shadow-2xl disabled:opacity-70 disabled:cursor-not-allowed hover:scale-[1.02] cursor-pointer"
     >
       {pending && <Loader2 className="w-5 h-5 animate-spin text-white" />}
-      {pending ? "Saving Settings..." : "Save Brand Settings"}
+      {pending ? "Saving Settings..." : "Save Settings"}
     </button>
   );
 }

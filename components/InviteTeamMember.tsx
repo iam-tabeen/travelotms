@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { UserPlus, X, Mail, Shield, User, KeyRound } from 'lucide-react';
 import { inviteTeamMember } from '@/app/actions/team';
 
-export default function InviteTeamMember({ tenantId }: { tenantId: string }) {
+export default function InviteTeamMember() {
     const [isOpen, setIsOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState('');
@@ -15,7 +15,6 @@ export default function InviteTeamMember({ tenantId }: { tenantId: string }) {
         setError('');
 
         const formData = new FormData(e.currentTarget);
-        formData.append('tenantId', tenantId);
 
         const result = await inviteTeamMember(formData);
 

@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 
 // We removed the ": NextConfig" here to stop the red line
 const nextConfig = {
+  transpilePackages: ['lucide-react'],
   images: {
     remotePatterns: [
       {

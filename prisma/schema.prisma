@@ -8,65 +8,58 @@ datasource db {
   directUrl = env("DIRECT_URL") // 👈 ADD THIS LINE
 }
 
+// Single-tenant settings model. This table always has exactly ONE row.
 model Tenant {
-  id              String           @id @default(uuid())
-  companyName     String
-  subdomain       String           @unique
-  logoUrl         String?
-  adminEmail      String           @unique
-  createdAt       DateTime         @default(now())
-  userId          String?          @unique
-  accentColor     String?          @default("#FF8C00")
-  buttonColor     String?          @default("#FF8C00")
-  headingColor    String?          @default("#1F2937")
-  navbarColor     String?          @default("#003580")
-  primaryColor    String?          @default("#003580")
-  cardColor       String?          @default("#111827")
-  footerColor     String?          @default("#111827")
-  navlink         String?          @default("#111827")
-  isActive        Boolean          @default(true)
-  planTier        String           @default("BASIC")
-  bookings        Booking[]
-  customTourLeads CustomTourLead[]
-  promoCodes      PromoCode[]
-  tours           Tour[]
-  backups         Backup[]
-  backupEmail     String?   
-  contactEmail  String?
-  metaPixelId      String?  
-  whatsappNumber   String?  // <-- Yeh nayi line add karein
-
-  allowPartialPayments Boolean @default(false) 
-
-  teamMembers TeamMember[]
-  
-  // 👇 THIS IS THE FIX: The Tenant reaches back to the ApiKey
-  apiKey          ApiKey? 
+  id                   String    @id @default(uuid())
+  companyName          String
+  subdomain            String    @unique
+  logoUrl              String?
+  adminEmail           String    @unique
+  createdAt            DateTime  @default(now())
+  // userId stores the Clerk ID of the agency owner.
+  userId               String?   @unique
+  accentColor          String?   @default("#FF8C00")
+  buttonColor          String?   @default("#FF8C00")
+  headingColor         String?   @default("#1F2937")
+  navbarColor          String?   @default("#003580")
+  primaryColor         String?   @default("#003580")
+  cardColor            String?   @default("#111827")
+  footerColor          String?   @default("#111827")
+  navlink              String?   @default("#111827")
+  isActive             Boolean   @default(true)
+  planTier             String    @default("BASIC")
+  backupEmail          String?
+  contactEmail         String?
+  metaPixelId          String?
+  whatsappNumber       String?
+  allowPartialPayments Boolean   @default(false)
+  // Singleton API key for this deployment
+  apiKey               ApiKey?
 }
 
 model ApiKey {
   id        String   @id @default(uuid())
-  key       String   @unique 
-  tenantId  String   @unique 
+  key       String   @unique
+  tenantId  String   @unique
   tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
 }
 
 model TeamMember {
   id        String   @id @default(uuid())
-  tenantId  String
-  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   name      String
   email     String
-  role      String   @default("AGENT") 
-  status    String   @default("PENDING") 
+  role      String   @default("AGENT")
+  status    String   @default("PENDING")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([email])
+  @@index([status])
 }
 
 model Tour {
   id                 String         @id @default(uuid())
-  tenantId           String
   title              String
   destination        String
   duration           String
@@ -91,7 +84,10 @@ model Tour {
   addOns             String         @default("[]")
   bookings           Booking[]
   itineraryDays      ItineraryDay[]
-  tenant             Tenant         @relation(fields: [tenantId], references: [id])
+
+  @@index([status])
+  @@index([createdAt])
+  @@index([status, departureDate])
 }
 
 model ItineraryDay {
@@ -104,28 +100,30 @@ model ItineraryDay {
 }
 
 model Booking {
-  id             String   @id @default(uuid())
-  tenantId       String
+  id             String    @id @default(uuid())
   tourId         String
   customerName   String
   customerEmail  String
   customerPhone  String
   numTravelers   Int
   totalPrice     Int
-  status         String   @default("PENDING")
+  status         String    @default("PENDING")
   paymentProof   String?
-  createdAt      DateTime @default(now())
+  createdAt      DateTime  @default(now())
   specialNotes   String?
   travelDate     DateTime
-  isWaitlist     Boolean  @default(false)
+  isWaitlist     Boolean   @default(false)
   selectedAddOns String?
-  tenant         Tenant   @relation(fields: [tenantId], references: [id])
-  tour           Tour     @relation(fields: [tourId], references: [id])
+  tour           Tour      @relation(fields: [tourId], references: [id])
+  amountPaid     Float     @default(0)
+  paymentStatus  String    @default("UNPAID")
+  payments       Payment[]
 
-  amountPaid     Float    @default(0) 
-  paymentStatus  String   @default("UNPAID") 
-  
-  payments       Payment[] 
+  @@index([status])
+  @@index([createdAt])
+  @@index([tourId])
+  @@index([paymentStatus])
+  @@index([isWaitlist, status])
 }
 
 model Payment {
@@ -138,11 +136,12 @@ model Payment {
   method     String   
   recordedBy String   
   notes      String?
+
+  @@index([bookingId])
 }
 
 model CustomTourLead {
   id            String   @id @default(cuid())
-  tenantId      String
   fullName      String
   email         String
   phone         String
@@ -157,7 +156,10 @@ model CustomTourLead {
   requirements  String?
   status        String   @default("PENDING")
   createdAt     DateTime @default(now())
-  tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([createdAt])
+  @@index([email])
 }
 
 model Backup {
@@ -165,15 +167,14 @@ model Backup {
   createdAt  DateTime @default(now())
   fileName   String
   fileUrl    String
-  backupType String   
-  tenant     Tenant   @relation(fields: [tenantId], references: [id])
-  tenantId   String
+  backupType String
+
+  @@index([createdAt])
 }
 
 model PromoCode {
   id            String    @id @default(cuid())
-  tenantId      String
-  code          String
+  code          String    @unique
   discountType  String
   discountValue Float
   validUntil    DateTime?
@@ -181,7 +182,8 @@ model PromoCode {
   timesUsed     Int       @default(0)
   isActive      Boolean   @default(true)
   createdAt     DateTime  @default(now())
-  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
-  @@unique([tenantId, code])
+  @@index([isActive])
+  @@index([validUntil])
+  @@index([isActive, validUntil])
 }

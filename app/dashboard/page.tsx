@@ -1,11 +1,17 @@
-import prisma from '@/lib/prisma';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import DashboardCharts from '@/components/DashboardCharts';
 import { Calendar, Clock, MapPin, Activity, Users, ArrowRight, TrendingUp, DollarSign, CreditCard } from 'lucide-react';
-import { getUserAccess } from '@/lib/getTenant'; 
+import { getUserAccess } from '@/lib/getTenant';
+import dynamic from 'next/dynamic';
+import { getCachedDashboardStats, getCachedTenant } from '@/lib/cache-helpers';
 
-export const dynamic = 'force-dynamic';
+// ⚡ ISR: Revalidate every 30 seconds instead of on every request (force-dynamic)
+export const revalidate = 30;
+
+// Lazy-load chart component (code-splitting)
+const DashboardCharts = dynamic(() => import('@/components/DashboardCharts'), {
+  loading: () => <div className="h-[400px] bg-gray-200 rounded-lg animate-pulse" />,
+});
 
 
 
@@ -18,72 +24,28 @@ export default async function AdminDashboard() {
     
     const canManageTours = ['OWNER', 'ADMIN'].includes(role);
 
-    const toursCount = await prisma.tour.count({ where: { tenantId: tenant.id } });
-    const activeToursCount = await prisma.tour.count({ where: { tenantId: tenant.id, status: 'ACTIVE' } });
-    
-    const leads = await prisma.booking.findMany({
-        where: { tenantId: tenant.id }, 
-        select: { status: true, totalPrice: true, isWaitlist: true, createdAt: true }
-    });
+    // ⚡ OPTIMIZATION: Use aggregation + caching instead of loading all bookings
+    const dashboardStats = await getCachedDashboardStats();
+    const cachedTenant = await getCachedTenant();
 
-    let confirmedRevenue = 0;
-    let pendingRevenue = 0;
-    let waitlistCount = 0;
-    let newLeads = 0;
-    
-    let totalLeadsCount = leads.length;
-    let convertedLeadsCount = 0;
+    const confirmedRevenue = dashboardStats.stats.totalRevenue;
+    const pendingRevenue = dashboardStats.stats.pendingRevenue;
+    const waitlistCount = dashboardStats.stats.waitlistCount;
+    const newLeads = dashboardStats.stats.pendingLeads;
+    const totalLeadsCount = dashboardStats.stats.totalLeads;
+    const convertedLeadsCount = dashboardStats.stats.confirmedLeads;
+    const conversionRate = dashboardStats.stats.conversionRate;
 
-    leads.forEach(lead => {
-        if (lead.status === 'CONFIRMED') {
-            confirmedRevenue += lead.totalPrice;
-            convertedLeadsCount++; 
-        }
-        if (lead.status === 'PENDING') {
-            pendingRevenue += lead.totalPrice;
-            newLeads++;
-        }
-        if (lead.isWaitlist && lead.status !== 'CANCELLED') waitlistCount++;
-    });
-
-    const conversionRate = totalLeadsCount > 0 
-        ? Math.round((convertedLeadsCount / totalLeadsCount) * 100) 
-        : 0;
-
-    const upcomingTours = await prisma.tour.findMany({
-        where: { tenantId: tenant.id },
-        orderBy: { createdAt: 'desc' }, 
-        take: 4,
-        include: {
-            _count: {
-                select: { bookings: { where: { status: 'CONFIRMED' } } }
-            }
-        }
-    });
-
-    const recentBookings = await prisma.booking.findMany({
-        where: { tenantId: tenant.id },
-        orderBy: { createdAt: 'desc' },
-        take: 5,
-        include: { 
-            tour: { select: { title: true } } 
-        }
-    });
+    const upcomingTours = dashboardStats.upcomingTours;
+    const recentBookings = dashboardStats.recentBookings;
 
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     const revenueByMonth = monthNames.map(month => ({ name: month, revenue: 0 }));
 
-    leads.forEach(lead => {
-        if (lead.status === 'CONFIRMED') {
-            const monthIndex = new Date(lead.createdAt).getMonth(); 
-            revenueByMonth[monthIndex].revenue += lead.totalPrice;
-        }
-    });
-
     const statusData = [
-        { name: 'Confirmed', value: leads.filter(l => l.status === 'CONFIRMED').length, fill: '#10B981' }, 
-        { name: 'Pending', value: leads.filter(l => l.status === 'PENDING').length, fill: '#F59E0B' }, 
-        { name: 'Cancelled', value: leads.filter(l => l.status === 'CANCELLED').length, fill: '#EF4444' }  
+        { name: 'Confirmed', value: convertedLeadsCount, fill: '#10B981' }, 
+        { name: 'Pending', value: newLeads, fill: '#F59E0B' }, 
+        { name: 'Cancelled', value: dashboardStats.stats.cancelledLeads, fill: '#EF4444' }  
     ];
 
     return (

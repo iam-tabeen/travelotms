@@ -33,13 +33,10 @@ export default async function SuperAdminDashboard() {
         return <SuperAdminLogin />;
     }
 
-    // 4. FETCH AGENCIES (Only runs if ALL security checks above pass!)
+    // 4. FETCH AGENCIES (Only one row in single-tenant, but keep findMany for compatibility)
     const agencies = await prisma.tenant.findMany({
         orderBy: { createdAt: 'desc' },
         include: {
-            _count: {
-                select: { tours: true, bookings: true }
-            },
             apiKey: true
         }
     });

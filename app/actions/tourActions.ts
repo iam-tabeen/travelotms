@@ -2,6 +2,7 @@
 
 import prisma from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
+import { revalidateTours, revalidateDashboard } from '@/lib/cache-helpers';
 
 export async function duplicateTour(tourId: string) {
     try {
@@ -29,6 +30,8 @@ export async function duplicateTour(tourId: string) {
 
         // 4. Refresh the page data
         revalidatePath('/dashboard/tours');
+        await revalidateTours();
+        await revalidateDashboard();
         
         return { success: true, newTourId: newTour.id };
 

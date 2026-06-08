@@ -2,8 +2,9 @@
 
 import prisma from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
+import { revalidatePromos } from '@/lib/cache-helpers';
 
-export async function createPromoCode(tenantId: string, formData: FormData) {
+export async function createPromoCode(formData: FormData) {
     const code = (formData.get('code') as string).toUpperCase().replace(/\s+/g, ''); // Force uppercase, no spaces
     const discountType = formData.get('discountType') as string;
     const discountValue = parseFloat(formData.get('discountValue') as string);
@@ -16,7 +17,6 @@ export async function createPromoCode(tenantId: string, formData: FormData) {
     try {
         await prisma.promoCode.create({
             data: {
-                tenantId,
                 code,
                 discountType,
                 discountValue,
@@ -27,6 +27,7 @@ export async function createPromoCode(tenantId: string, formData: FormData) {
         });
         
         revalidatePath('/dashboard/promos');
+        await revalidatePromos();
         return { success: true };
     } catch (error) {
         console.error("Failed to create promo code:", error);
@@ -41,6 +42,7 @@ export async function togglePromoStatus(id: string, currentStatus: boolean) {
             data: { isActive: !currentStatus }
         });
         revalidatePath('/dashboard/promos');
+        await revalidatePromos();
         return { success: true };
     } catch (error) {
         console.error("Failed to toggle promo:", error);
@@ -48,15 +50,10 @@ export async function togglePromoStatus(id: string, currentStatus: boolean) {
     }
 }
 
-export async function validatePromoCode(code: string, tenantId: string) {
+export async function validatePromoCode(code: string) {
     try {
         const promo = await prisma.promoCode.findUnique({
-            where: {
-                tenantId_code: { 
-                    tenantId: tenantId, 
-                    code: code.toUpperCase().replace(/\s+/g, '') 
-                }
-            }
+            where: { code: code.toUpperCase().replace(/\s+/g, '') }
         });
 
         if (!promo) return { error: "Invalid promo code." };

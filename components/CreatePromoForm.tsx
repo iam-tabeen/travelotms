@@ -5,7 +5,7 @@ import { createPromoCode } from '@/app/actions/promos';
 import { Plus, X } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
-export default function CreatePromoForm({ tenantId }: { tenantId: string }) {
+export default function CreatePromoForm() {
     const [isOpen, setIsOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -15,7 +15,7 @@ export default function CreatePromoForm({ tenantId }: { tenantId: string }) {
         const formData = new FormData(e.currentTarget);
         
         try {
-            await createPromoCode(tenantId, formData);
+            await createPromoCode(formData);
             toast.success("Promo code created successfully!");
             setIsOpen(false);
         } catch (error) {

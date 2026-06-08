@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Database, Loader2 } from 'lucide-react';
 import { createBackup } from '@/app/actions/backup-actions';
 
-export default function BackupActions({ isPro, tenantId }: { isPro: boolean, tenantId: string }) {
+export default function BackupActions({ isPro }: { isPro: boolean }) {
     const [isPending, setIsPending] = useState(false);
 
     const handleBackup = async () => {
@@ -14,7 +14,7 @@ export default function BackupActions({ isPro, tenantId }: { isPro: boolean, ten
         }
         
         setIsPending(true);
-        const result = await createBackup(tenantId, 'MANUAL');
+        const result = await createBackup('MANUAL');
         
         if (result.success) {
             alert("✅ Backup created successfully! It is now stored in your vault.");

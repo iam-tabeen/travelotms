@@ -4,6 +4,7 @@ import prisma from '@/lib/prisma';
 import { auth } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
+import { revalidateDashboard, revalidateTours } from '@/lib/cache-helpers';
 
 // --- HYPER-SAFE DATA SANITIZATION HELPERS ---
 function safeFloat(val: any) {
@@ -38,8 +39,8 @@ export async function createTour(formData: FormData) {
   const { userId } = await auth();
   if (!userId) throw new Error('Unauthorized');
 
-  const tenant = await prisma.tenant.findUnique({ where: { userId } });
-  if (!tenant) throw new Error('Tenant not found');
+  const tenant = await prisma.tenant.findFirst();
+  if (!tenant) throw new Error('Agency settings not found');
 
   const title = (formData.get('title') as string) || 'Untitled Tour';
   const destination = (formData.get('destination') as string) || 'Unknown';
@@ -80,7 +81,6 @@ export async function createTour(formData: FormData) {
 
   await prisma.tour.create({
     data: {
-      tenantId: tenant.id,
       title,
       destination,
       basePrice,
@@ -106,6 +106,9 @@ export async function createTour(formData: FormData) {
       }
     }
   });
+
+  await revalidateTours();
+  await revalidateDashboard();
 
   // THE FIX: Added the ?success parameter to trigger the Toast!
   redirect('/dashboard/tours?success=Tour_Added_Successfully!');
@@ -182,6 +185,9 @@ export async function updateTour(tourId: string, formData: FormData) {
     }
   });
 
+  await revalidateTours();
+  await revalidateDashboard();
+
   // THE FIX: Added the ?success parameter to trigger the Toast!
   redirect('/dashboard/tours?success=Tour_Updated_Successfully!');
 }
@@ -193,6 +199,9 @@ export async function deleteTour(tourId: string) {
   await prisma.tour.delete({
     where: { id: tourId },
   });
+
+  await revalidateTours();
+  await revalidateDashboard();
 
   // THE FIX: Redirects back to the same page but injects the success message
   redirect('/dashboard/tours?success=Tour_Deleted_Successfully');
@@ -208,6 +217,8 @@ export async function quickUpdateBookingMode(tourId: string, bookingMode: string
   });
 
   revalidatePath('/dashboard/tours');
+  await revalidateTours();
+  await revalidateDashboard();
   // THE FIX: Return a success object so the client dropdown component can fire a toast directly!
   return { success: true };
 }

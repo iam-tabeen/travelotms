@@ -13,12 +13,11 @@ export default async function CalendarPage() {
     // Fetch all active tours that have a scheduled departure date
     const tours = await prisma.tour.findMany({
         where: {
-            tenantId: tenant.id,
             status: 'ACTIVE',
-            departureDate: { not: null } // Only fetch tours with a specific date
+            departureDate: { not: null }
         },
         include: {
-            bookings: true // Include bookings so we can count travelers
+            bookings: true
         }
     });
 

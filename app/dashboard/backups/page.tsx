@@ -20,10 +20,9 @@ export default async function SafetyVaultPage() {
         redirect('/dashboard'); 
     }
 
-    // 3. Fetch the backups explicitly using tenantId
+    // 3. Fetch all backups for this deployment
     const backups = await prisma.backup.findMany({
-        where: { tenantId: tenant.id },
-        orderBy: { createdAt: 'desc' } // Shows newest first
+        orderBy: { createdAt: 'desc' }
     });
 
     const isPro = tenant.planTier === 'PRO';
@@ -67,7 +66,7 @@ export default async function SafetyVaultPage() {
                     </div>
 
                     {/* The Backup Trigger Button */}
-                    <BackupActions isPro={isPro} tenantId={tenant.id} />
+                    <BackupActions isPro={isPro} />
                 </div>
 
                 {!isPro ? (

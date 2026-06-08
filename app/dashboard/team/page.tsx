@@ -22,7 +22,7 @@ export default async function TeamDashboard() {
     const isPro = tenant.planTier === 'PRO';
 
     const teamMembers = isPro ? await prisma.teamMember.findMany({
-        where: { tenantId: tenant.id },
+        where: {},
         orderBy: { createdAt: 'desc' }
     }) : [];
 
@@ -79,7 +79,7 @@ export default async function TeamDashboard() {
                 {/* Header */}
                 <div className="bg-white rounded-[24px] shadow-sm border border-gray-100 p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 transition-colors team-bg-card team-border-main">
                     <div>
-                        <h1 className="text-2xl md:text-3xl font-black text-[#0A1628] uppercase tracking-tighter flex items-center gap-3 team-text-primary">
+                        <h1 className="text-2xl md:text-3xl font-black text-[#0A1628]  tracking-tighter flex items-center gap-3 team-text-primary">
                             <Users className="text-[#2563EB]" size={32} />
                             Team Management
                         </h1>
@@ -87,7 +87,7 @@ export default async function TeamDashboard() {
                     </div>
                     
                     {isPro && (
-                        <InviteTeamMember tenantId={tenant.id} />
+                        <InviteTeamMember />
                     )}
                 </div>
 

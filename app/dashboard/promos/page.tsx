@@ -32,7 +32,7 @@ export default async function PromosDashboard() {
 
     // 4. Only fetch the promo codes from the database IF they are a PRO member
     const promos = isPro ? await prisma.promoCode.findMany({
-        where: { tenantId: tenant.id },
+        where: {},
         orderBy: { createdAt: 'desc' }
     }) : [];
 
@@ -70,7 +70,7 @@ export default async function PromosDashboard() {
                     </div>
                     
                     {/* Only show the Creation Form if they are PRO */}
-                    {isPro && <CreatePromoForm tenantId={tenant.id} />}
+                    {isPro && <CreatePromoForm />}
                 </div>
 
                 {!isPro ? (

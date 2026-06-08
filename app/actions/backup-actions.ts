@@ -11,16 +11,13 @@ const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'dummy-key-for-buil
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-export async function createBackup(tenantId: string, type: 'MANUAL' | 'AUTOMATIC') {
+export async function createBackup(type: 'MANUAL' | 'AUTOMATIC') {
     try {
         // 1. FETCH ALL AGENCY DATA
-        const leads = await prisma.booking.findMany({ 
-            where: { tenantId },
-            include: { tour: true } 
+        const leads = await prisma.booking.findMany({
+            include: { tour: true }
         });
-        const customLeads = await prisma.customTourLead.findMany({ 
-            where: { tenantId } 
-        });
+        const customLeads = await prisma.customTourLead.findMany({});
 
         if (leads.length === 0 && customLeads.length === 0) {
             return { success: false, error: "No data found to backup." };
@@ -46,9 +43,8 @@ export async function createBackup(tenantId: string, type: 'MANUAL' | 'AUTOMATIC
 
         const csvContent = headers + regularRows + (customRows ? "\n" + customRows : "");
 
-        // --- NEW: FETCH THE TENANT'S TARGET EMAIL ---
-        const tenantInfo = await prisma.tenant.findUnique({
-            where: { id: tenantId },
+        // --- FETCH THE AGENCY'S TARGET EMAIL ---
+        const tenantInfo = await prisma.tenant.findFirst({
             select: { backupEmail: true, adminEmail: true }
         });
         
@@ -58,7 +54,6 @@ export async function createBackup(tenantId: string, type: 'MANUAL' | 'AUTOMATIC
 
         // 3. ENFORCE THE 5-BACKUP LIMIT (CLEANUP)
         const existingBackups = await prisma.backup.findMany({
-            where: { tenantId },
             orderBy: { createdAt: 'asc' } // Oldest first
         });
 
@@ -80,7 +75,7 @@ export async function createBackup(tenantId: string, type: 'MANUAL' | 'AUTOMATIC
         // 4. GENERATE FILE NAMES & SEND EMAIL (IF AUTOMATIC)
         const timestamp = new Date().toISOString().split('T')[0];
         const fileName = `backup_${type.toLowerCase()}_${timestamp}_${Date.now()}.csv`;
-        const storagePath = `${tenantId}/${fileName}`;
+        const storagePath = `agency/${fileName}`;
 
         // Send the email with the CSV attached!
         if (type === 'AUTOMATIC' && targetEmail) {
@@ -103,9 +98,8 @@ export async function createBackup(tenantId: string, type: 'MANUAL' | 'AUTOMATIC
         await prisma.backup.create({
             data: {
                 fileName,
-                fileUrl: storagePath, 
+                fileUrl: storagePath,
                 backupType: type,
-                tenantId: tenantId
             }
         });
 

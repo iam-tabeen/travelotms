@@ -2,11 +2,11 @@
 
 import prisma from '@/lib/prisma';
 import nodemailer from 'nodemailer';
+import { revalidateDashboard, revalidateFinance, revalidateTours } from '@/lib/cache-helpers';
 
 export async function submitBooking(
-  tourId: string, 
-  tenantId: string, 
-  basePrice: number, 
+  tourId: string,
+  basePrice: number,
   formData: FormData
 ) {
   const isWaitlist = formData.get('isWaitlist') === 'true';
@@ -37,7 +37,6 @@ export async function submitBooking(
   try {
     await prisma.booking.create({
       data: {
-        tenantId,
         tourId,
         customerName,
         customerEmail,
@@ -93,6 +92,12 @@ export async function submitBooking(
     };
 
     await transporter.sendMail(mailOptions);
+    
+    // ⚡ OPTIMIZATION: Invalidate dashboard and finance caches after booking
+    await revalidateDashboard();
+    await revalidateFinance();
+    await revalidateTours();
+    
     return { success: true };
 
   } catch (error) {

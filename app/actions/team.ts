@@ -3,22 +3,22 @@
 import prisma from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { clerkClient } from '@clerk/nextjs/server'; // <-- Clerk's secret weapon
+import { revalidateTeam } from '@/lib/cache-helpers';
 
 export async function inviteTeamMember(formData: FormData) {
-    const tenantId = formData.get('tenantId') as string;
     const name = formData.get('name') as string;
     const email = formData.get('email') as string;
     const role = formData.get('role') as string;
     const password = formData.get('password') as string;
 
-    if (!tenantId || !name || !email || !role || !password) {
+    if (!name || !email || !role || !password) {
         return { error: "Missing required fields" };
     }
 
     try {
         // 1. Check if the user already exists in this workspace
         const existingMember = await prisma.teamMember.findFirst({
-            where: { tenantId, email }
+            where: { email }
         });
 
         if (existingMember) {
@@ -45,16 +45,16 @@ export async function inviteTeamMember(formData: FormData) {
         // 3. Create the team member in YOUR database as ACTIVE immediately!
         await prisma.teamMember.create({
             data: {
-                tenantId,
                 name,
                 email,
                 role,
-                status: 'ACTIVE' // No pending state needed!
+                status: 'ACTIVE'
             }
         });
 
         // 4. Refresh the team page
         revalidatePath('/dashboard/team');
+        await revalidateTeam();
         return { success: true };
 
     } catch (error) {
@@ -72,6 +72,7 @@ export async function updateTeamMemberRole(memberId: string, newRole: 'AGENT' | 
             data: { role: newRole }
         });
         revalidatePath('/dashboard/team');
+        await revalidateTeam();
         return { success: true };
     } catch (error) {
         console.error("Failed to update role:", error);
@@ -85,6 +86,7 @@ export async function removeTeamMember(memberId: string) {
             where: { id: memberId }
         });
         revalidatePath('/dashboard/team');
+        await revalidateTeam();
         return { success: true };
     } catch (error) {
         console.error("Failed to remove member:", error);

@@ -23,9 +23,9 @@ export default async function EditTourPage({ params }: { params: Promise<{ id: s
     include: { itineraryDays: { orderBy: { dayNumber: 'asc' } } }
   });
 
-  // 🛡️ CROSS-TENANT GUARD: Make sure the tour actually belongs to this agency!
-  if (!tour || tour.tenantId !== tenant.id) {
-      notFound(); 
+  // Since the DB is single-tenant, just verify the tour exists.
+  if (!tour) {
+      notFound();
   }
 
   return (

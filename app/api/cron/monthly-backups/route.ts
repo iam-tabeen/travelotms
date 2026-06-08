@@ -15,56 +15,49 @@ export async function GET(request: Request) {
     }
 
     try {
-        // 2. Find ALL agencies that are paying for the PRO tier
-        const proTenants = await prisma.tenant.findMany({
-            where: { planTier: 'PRO' },
-            select: { 
-                id: true, 
-                companyName: true,
-                // Add the tenant's email here if you have it in this model!
-                // email: true 
-            }
+        // 2. In the single-tenant model there is only one agency.
+        //    Check that it is on the PRO plan before running.
+        const tenant = await prisma.tenant.findFirst({
+            select: { companyName: true, planTier: true, contactEmail: true, adminEmail: true }
         });
 
-        console.log(`Found ${proTenants.length} PRO tenants. Starting automated backups...`);
-
-        // 3. Loop through them and generate an 'AUTOMATIC' backup
-        for (const tenant of proTenants) {
-            console.log(`Processing backup for: ${tenant.companyName}`);
-            
-            // Generate the backup
-            await createBackup(tenant.id, 'AUTOMATIC');
-            
-            // ✅ Send the notification email
-            // Wrapped in a try/catch so if one email fails, it doesn't stop the rest of the backups!
-            try {
-                // Ensure you only try to send if you aren't using the dummy key during a build
-                if (process.env.RESEND_API_KEY) {
-                    await resend.emails.send({
-                        from: 'Travelo CRM <noreply@yourdomain.com>', // Update with your verified Resend domain
-                        to: ['agency-owner@example.com'], // Update with tenant.email
-                        subject: '✅ Your Monthly Backup is Ready',
-                        html: `
-                            <div style="font-family: sans-serif; padding: 20px; color: #333;">
-                                <h2 style="color: #2563EB;">Backup Successful</h2>
-                                <p>Hi there,</p>
-                                <p>Your automated monthly backup for <strong>${tenant.companyName}</strong> has been successfully created and securely stored.</p>
-                                <p>You can view and download this backup anytime from your Admin Dashboard under the <strong>Backups</strong> tab.</p>
-                                <br/>
-                                <p style="font-size: 12px; color: #888;">Thank you for using Travelo CRM (PRO Tier).</p>
-                            </div>
-                        `
-                    });
-                    console.log(`Email sent for ${tenant.companyName}`);
-                }
-            } catch (emailError) {
-                console.error(`Failed to send email to ${tenant.companyName}:`, emailError);
-            }
+        if (!tenant || tenant.planTier !== 'PRO') {
+            return NextResponse.json({ success: true, message: "No PRO account to backup." });
         }
 
-        return NextResponse.json({ 
-            success: true, 
-            message: `Successfully backed up ${proTenants.length} PRO accounts.` 
+        console.log(`Processing backup for: ${tenant.companyName}`);
+
+        // 3. Generate the single 'AUTOMATIC' backup
+        await createBackup('AUTOMATIC');
+
+        // 4. Send the notification email
+        try {
+            const notifyEmail = tenant.contactEmail || tenant.adminEmail;
+            if (process.env.RESEND_API_KEY && notifyEmail) {
+                await resend.emails.send({
+                    from: 'Travelo CRM <noreply@yourdomain.com>',
+                    to: [notifyEmail],
+                    subject: '✅ Your Monthly Backup is Ready',
+                    html: `
+                        <div style="font-family: sans-serif; padding: 20px; color: #333;">
+                            <h2 style="color: #2563EB;">Backup Successful</h2>
+                            <p>Hi there,</p>
+                            <p>Your automated monthly backup for <strong>${tenant.companyName}</strong> has been successfully created and securely stored.</p>
+                            <p>You can view and download this backup anytime from your Admin Dashboard under the <strong>Backups</strong> tab.</p>
+                            <br/>
+                            <p style="font-size: 12px; color: #888;">Thank you for using Travelo CRM (PRO Tier).</p>
+                        </div>
+                    `
+                });
+                console.log(`Email sent for ${tenant.companyName}`);
+            }
+        } catch (emailError) {
+            console.error(`Failed to send backup email:`, emailError);
+        }
+
+        return NextResponse.json({
+            success: true,
+            message: `Successfully backed up ${tenant.companyName}.`
         });
 
     } catch (error: any) {

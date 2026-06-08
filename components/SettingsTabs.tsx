@@ -1,13 +1,19 @@
 "use client";
 
-import { useState } from 'react';
+import { useActionState, useEffect, useState } from 'react';
 import { updateAgencySettings } from '@/app/dashboard/settings/actions';
 import { Lock, Palette, Briefcase, ShieldCheck } from 'lucide-react';
-import SettingsSubmitButton from '@/components/SettingsSubmitButton'; 
+import SettingsSubmitButton from '@/components/SettingsSubmitButton';
 import ChangePasswordForm from '@/components/ChangePasswordForm';
+import { toast } from 'react-hot-toast';
 
 export default function SettingsTabs({ tenant, isPro }: { tenant: any, isPro: boolean }) {
   const [activeTab, setActiveTab] = useState<'branding' | 'operations' | 'security'>('branding');
+  const [state, formAction] = useActionState(updateAgencySettings, null);
+
+  useEffect(() => {
+    if (state?.error) toast.error(state.error);
+  }, [state]);
 
   const tabs = [
     { id: 'branding', label: 'Branding', icon: Palette },
@@ -38,7 +44,7 @@ export default function SettingsTabs({ tenant, isPro }: { tenant: any, isPro: bo
       </div>
 
       {/* --- MAIN FORM (For Branding & Operations) --- */}
-      <form action={updateAgencySettings} className={activeTab === 'security' ? 'hidden' : 'block'}>
+      <form action={formAction} className={activeTab === 'security' ? 'hidden' : 'block'}>
         
         {/* TAB 1: BRANDING */}
         <div className={`space-y-10 animate-in fade-in duration-500 ${activeTab === 'branding' ? 'block' : 'hidden'}`}>
@@ -134,7 +140,6 @@ export default function SettingsTabs({ tenant, isPro }: { tenant: any, isPro: bo
               defaultValue={tenant?.contactEmail || ""} 
               placeholder="e.g., bookings@axiusdigital.com"
               className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-2xl outline-none transition-all text-gray-900 shadow-inner set-input"
-              required
             />
             <p className="text-xs text-gray-500 set-text-secondary mt-2">
               You will receive Contact Form, New Bookings, and Custom Tour requests notifications on this email address.

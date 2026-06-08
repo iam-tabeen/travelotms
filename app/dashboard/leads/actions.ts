@@ -3,6 +3,7 @@
 
 import prisma from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
+import { revalidateDashboard, revalidateFinance, revalidateTours } from '@/lib/cache-helpers';
 
 export async function updateBookingStatus(bookingId: string, newStatus: string) {
   try {
@@ -54,6 +55,9 @@ export async function updateBookingStatus(bookingId: string, newStatus: string) 
     
     // NEW: Refresh the dashboard too, so the capacity progress bar updates instantly!
     revalidatePath('/dashboard'); 
+    await revalidateDashboard();
+    await revalidateFinance();
+    await revalidateTours();
 
     return { success: true, status: newStatus };
 

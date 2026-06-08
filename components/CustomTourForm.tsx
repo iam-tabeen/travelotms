@@ -3,13 +3,13 @@
 import { useState } from 'react';
 import { submitCustomTour } from '@/app/actions/customTour';
 
-// 1. Accept the tenantId prop
-export default function CustomTourForm({ tenantId }: { tenantId: string }) {
+// CustomTourForm — single-tenant version (no tenantId required)
+export default function CustomTourForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  // 2. Bind the tenantId to the server action
-  const formAction = submitCustomTour.bind(null, tenantId);
+  // Bind with no extra argument — the action reads the DB directly
+  const formAction = submitCustomTour.bind(null);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

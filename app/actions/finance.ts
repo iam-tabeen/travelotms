@@ -3,6 +3,7 @@
 import prisma from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { auth, currentUser } from '@clerk/nextjs/server';
+import { revalidateDashboard, revalidateFinance } from '@/lib/cache-helpers';
 
 export async function logPayment(bookingId: string, amount: number, method: string, notes: string) {
     const { userId } = await auth();
@@ -45,6 +46,8 @@ export async function logPayment(bookingId: string, amount: number, method: stri
         // 4. Refresh the pages so the UI updates instantly
         revalidatePath('/dashboard/leads');
         revalidatePath('/dashboard/finance');
+        await revalidateFinance();
+        await revalidateDashboard();
         
         return { success: true };
     } catch (error) {

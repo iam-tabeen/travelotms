@@ -45,7 +45,7 @@ export default async function SettingsPage() {
 
       <div className="max-w-3xl mx-auto">
       <div className="mb-8 flex justify-between items-center px-4">
-          <h1 className="text-3xl md:text-4xl font-black uppercase tracking-tight text-gray-900 set-text-primary">
+          <h1 className="text-3xl md:text-4xl font-black tracking-tight text-gray-900 set-text-primary">
             Agency Settings
           </h1>
           <Link 

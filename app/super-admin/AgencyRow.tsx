@@ -32,9 +32,9 @@ export default function AgencyRow({ agency }: { agency: any }) {
     // New handler to generate the key
     const handleGenerateKey = async () => {
         setIsGenerating(true);
-        const res = await generateApiKey(agency.id);
+        const res = await generateApiKey();
         if (!res.success) {
-            alert(res.message); // Fallback error handling
+            alert(res.message);
         }
         setIsGenerating(false);
     };
