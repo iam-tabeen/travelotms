@@ -6,10 +6,11 @@ import { usePathname } from 'next/navigation'; // <-- 2. Import the route checke
 export default function WhatsAppButton({ phone }: { phone?: string | null }) {
   const pathname = usePathname(); // 3. Get the current URL
 
-  // 4. THE FIX: Hide the button on admin, suspended, and super-admin pages!
+  // Hide on dashboard and other admin-only routes
   if (
-    pathname?.startsWith('/admin') || 
-    pathname?.startsWith('/suspended') || 
+    pathname?.startsWith('/dashboard') ||
+    pathname?.startsWith('/onboarding') ||
+    pathname?.startsWith('/suspended') ||
     pathname?.startsWith('/super-admin')
   ) {
     return null;
